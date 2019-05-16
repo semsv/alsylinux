@@ -1,0 +1,196 @@
+#/bin/sh
+############################################################################################################
+###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
+###   Автор: Севастьянов Семен Владимирович                                                              ###
+###   Дата: 19 сентября 2017 года                                                                        ###
+###   Версия: 1.0.0                                                                                      ###
+###   Как пользоваться данным файлом (setup):                                                            ###
+###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
+###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
+###               3. Открываем консоль                                                                   ### 
+###               4. Выполняем команду: setup /usr/src/readline-7.0 0030                                 ###
+###               5. Все готово! Теперь в директории "/usr/src",                                         ### 
+###                  у нас лежит файл 0030-ALSY.readline-7.0.ab                                          ###
+###                  и данный файл скопирован на флешку, после перезагрузки программа будет доступна     ###
+###  Наслаждайтесь!!!                                                                                    ###
+############################################################################################################
+#Объявляем переменные
+version=1.0.0
+AppFullName="$1"                                           # Полный путь и имя файла
+AppName="$(basename "$1")"                                 # Только имя файла без пути
+NumberAlsyBundleFile="$2"                                  # Номер файла Alsy Bundle
+Options="$3"                                               # Опции для setup
+AppPrefix="/usr/src/tools"                                 # Где в итоге будет программа !!! Внимание! Не меняйте данную директорию на системную, типа "/", "/lib64", "/usr" и т.д.
+AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий конфигурации 
+ConfigureFile="configure"
+
+#Удаляем все логи от предыдущих сборок из исходников программы
+rm -r $AppFullName/setup_all.log 2>/dev/null
+rm -r $AppFullName/setup_config.log 2>/dev/null
+rm -r $AppFullName/setup_config_err.log 2>/dev/null
+rm -r $AppFullName/setup_compile.log 2>/dev/null
+rm -r $AppFullName/setup_compile_err.log 2>/dev/null
+rm -r $AppFullName/setup_install.log 2>/dev/null
+rm -r $AppFullName/setup_install_err.log 2>/dev/null
+
+#Запись в лог о скрипте сборки
+echo "************************************************************************************************" >$AppFullName/setup_all.log
+echo "$(date) : Starting Alsy Bundle Setup script version: $version" >>$AppFullName/setup_all.log
+echo "$(uname -a)" >>$AppFullName/setup_all.log
+echo "$AppFullName" >>$AppFullName/setup_all.log
+echo "$AppName" >>$AppFullName/setup_all.log
+echo "$NumberAlsyBundleFile" >>$AppFullName/setup_all.log
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+if [ "$Options" == "-x" ]; then
+  AppConfigScenario="config.sh"
+  ConfigureFile="$AppConfigScenario"
+else
+  if [ "$(ls -1 | grep autogen 2>/dev/null)" != "" ]; then
+    AppConfigScenario="autogen.sh"
+    ConfigureFile="$AppConfigScenario"
+  fi
+fi
+echo "$AppConfigScenario" >> $AppFullName/setup_all.log
+
+#Переходим в директорию с исходниками программы
+cd $AppFullName >>$AppFullName/setup_all.log
+
+#Если файл конфигурации отсутствует, то прекращаем
+if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
+ echo "Error: Configure file $ConfigureFile does not exists!"
+ echo "Error: Configure file $ConfigureFile does not exists!" >>$AppFullName/setup_all.log
+ exit
+fi
+
+#Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
+if [ "$(ls -1 | grep Makefile 2>/dev/null)" != "" ]; then 
+ make clean >>$AppFullName/setup_all.log 2>/dev/null
+ rm -r Makefile 2>/dev/null
+fi
+
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+echo "****  CONFIGURE SCRIPT START                                                               *****" >>$AppFullName/setup_all.log
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+#Выполняем конфигурацию программы
+#./configure --prefix=$AppPrefix/$AppName
+./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
+if [ "$ConfigureFile" == "autogen.sh" ]; then
+#After run autogen.sh if true: Now you are ready to run ./configure
+  AppConfigScenario="configure --prefix=$AppPrefix/$AppName"
+  ConfigureFile="configure"
+./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
+fi
+
+#Проверяем наличие Makefile
+if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
+  echo "$(less ALSYBUILDPATH)"
+  ALSYBUILDPATH="$(less ALSYBUILDPATH)"
+  if [ "$ALSYBUILDPATH" == "" ]; then
+   echo "Error: Makefile "Makefile.in" does not exists!"
+   exit
+  else
+   cd "$ALSYBUILDPATH"
+  fi 
+fi
+
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+echo "****  MAKEFILE SCRIPT START                                                                *****" >>$AppFullName/setup_all.log
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+#Команда компилятору выполнить сборку
+make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
+
+#Также проверим логи, иногда в процессе установки возникают ошибки
+if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
+  echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
+  exit
+fi
+
+#Перед установкой очищаем от предыдущих установок
+if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" != "" ]; then 
+rm -rd $AppPrefix/$AppName
+fi
+
+
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+echo "****  MAKEFILE INSTALL SCRIPT START                                                        *****" >>$AppFullName/setup_all.log
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+#Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
+make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+
+#Если все хорошо то у нас появляется директория $AppPrefix/$AppName, проверим это:
+if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" == "" ]; then 
+   echo "Error: Compilation finished with error! Look *.log files for more info!"
+   exit
+fi
+
+#Также проверим логи, иногда в процессе установки возникают ошибки
+if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error 2>/dev/null)" != "" ]; then
+  echo "Error: Installation finished with error! Look setup_install_err.log for more info!"
+  exit
+fi
+
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+echo "****  FINISH                                                                               *****" >>$AppFullName/setup_all.log
+echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+
+#Выходим из директории с программой
+cd $AppFullName
+cd ..
+
+#Если, вдруг, остались файлы от предыдущих установок, то надо их удалить
+if [ "$(ls -1 -a | grep .new_install 2>/dev/null)" != "" ]; then
+rm -rd .new_install
+fi
+
+#Создаем директорию для новой программы
+mkdir -p .new_install/$AppPrefix
+
+#Создаем директорию для исходных кодов программы
+mkdir -p .new_install/usr/src/alsy-source
+
+#Создаем еще одну директорию в которую устанавливается большинство библиотек по умолчанию
+mkdir -p .new_install/usr/local
+
+#Копируем программу в эту директорию
+cp -rd $AppPrefix/$AppName .new_install/$AppPrefix
+
+#Копируем исходные коды программы
+cp -rd $AppFullName .new_install/usr/src/alsy-source
+
+#Если в программе есть папка lib, то ее надо скопировать в lib64
+if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib 2>/dev/null)" != "" ]; then
+ #Проверим сначала что такой папки еще нет
+ if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib64 2>/dev/null)" == "" ]; then
+   cp -r .new_install/$AppPrefix/$AppName/lib .new_install/$AppPrefix/$AppName/lib64
+ fi  
+fi
+
+#Теперь копируем содержимое папки программы в "корень"^1 и в "/usr"^2 и в "/usr/local"
+cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
+cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
+cp -r .new_install/$AppPrefix/$AppName/* .new_install
+
+#Теперь - финальная стадия - создаем файл Alsy Bundle
+dir2sb .new_install $2-ALSY.$AppName.ab
+
+#И Удаляем временную директорию программы
+rm -rd .new_install
+
+#Удаляем файлы программы из установочной директории
+rm -rd $AppPrefix/$AppName
+
+#Выполняем установку программы в операционную систему
+cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/alsylin/modules
+
+exit
+############################################################################################################
+###   Пояснения: ^1 - Корень директории, имеется ввиду условный корень,                                  ### 
+###              то есть корневой, данная директория будет после монтирования Alsy Bundle                ###
+###              ^2 - Аналогично пояснению 1, директория "/usr" подразумевается условная директория,     ###
+###                   которая физически будет таковой, только после монтирования                         ###
+############################################################################################################
