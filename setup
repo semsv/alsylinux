@@ -45,11 +45,6 @@ echo "**************************************************************************
 if [ "$Options" == "-x" ]; then
   AppConfigScenario="config.sh"
   ConfigureFile="$AppConfigScenario"
-else
-  if [ "$(ls -1 | grep autogen 2>/dev/null)" != "" ]; then
-    AppConfigScenario="autogen.sh"
-    ConfigureFile="$AppConfigScenario"
-  fi
 fi
 echo "$AppConfigScenario" >> $AppFullName/setup_all.log
 
@@ -76,23 +71,11 @@ echo "**************************************************************************
 #Выполняем конфигурацию программы
 #./configure --prefix=$AppPrefix/$AppName
 ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
-if [ "$ConfigureFile" == "autogen.sh" ]; then
-#After run autogen.sh if true: Now you are ready to run ./configure
-  AppConfigScenario="configure --prefix=$AppPrefix/$AppName"
-  ConfigureFile="configure"
-./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
-fi
 
 #Проверяем наличие Makefile
 if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
-  echo "$(less ALSYBUILDPATH)"
-  ALSYBUILDPATH="$(less ALSYBUILDPATH)"
-  if [ "$ALSYBUILDPATH" == "" ]; then
    echo "Error: Makefile "Makefile.in" does not exists!"
    exit
-  else
-   cd "$ALSYBUILDPATH"
-  fi 
 fi
 
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
