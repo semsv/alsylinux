@@ -114,7 +114,7 @@ echo "**************************************************************************
 #FIX BUG:1 BEGIN
 #Проверяем наличие Makefile (повторно)
 if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
-  cp -r .MakeFile.alsycpmake Makefile
+  cp -r $AppFullName/.MakeFile.alsycpmake Makefile
 fi
 #FIX BUG:1 END
 
