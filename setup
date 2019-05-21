@@ -3,7 +3,7 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.0                                                                                      ###
+###   Версия: 1.0.1                                                                                      ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -72,7 +72,7 @@ if [ "$(ls -1 | grep Makefile 2>/dev/null)" != "" ]; then
 #Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
 #соотв здесь он просто удалялся и все как говорится, привет на этом, поэтому решено предварительно его копировать здесь в файл
 #с именем .MakeFile.alsycpmake
- cp -r Makefile .MakeFile.alsycpmake
+ cp -r Makefile $AppFullName/.MakeFile.alsycpmake
 #что нам это дает? 
 #А дает нам это то, что теперь после того как выполнится конфигурация 
 #и мы увидем ситуацию когда ошибок нет, 
@@ -95,6 +95,13 @@ if [ "$ConfigureFile" == "autogen.sh" ]; then
 ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
 fi
 
+#FIX BUG:1 BEGIN
+#Проверяем наличие Makefile
+if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
+  cp -r $AppFullName/.MakeFile.alsycpmake Makefile
+fi
+#FIX BUG:1 END
+
 #Проверяем наличие Makefile
 if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
   echo "$(less ALSYBUILDPATH)"
@@ -110,13 +117,6 @@ fi
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 echo "****  MAKEFILE SCRIPT START                                                                *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
-
-#FIX BUG:1 BEGIN
-#Проверяем наличие Makefile (повторно)
-if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
-  cp -r $AppFullName/.MakeFile.alsycpmake Makefile
-fi
-#FIX BUG:1 END
 
 #Команда компилятору выполнить сборку
 make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
