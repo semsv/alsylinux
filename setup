@@ -72,7 +72,7 @@ if [ "$(ls -1 | grep Makefile 2>/dev/null)" != "" ]; then
 #Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
 #соотв здесь он просто удалялся и все как говорится, привет на этом, поэтому решено предварительно его копировать здесь в файл
 #с именем .MakeFile.alsycpmake
- cp -r Makefile $AppFullName/.MakeFile.alsycpmake
+ cp -r Makefile $AppFullName/.Makefile.alsycpmake 2>/dev/null
 #что нам это дает? 
 #А дает нам это то, что теперь после того как выполнится конфигурация 
 #и мы увидем ситуацию когда ошибок нет, 
@@ -98,7 +98,7 @@ fi
 #FIX BUG:1 BEGIN
 #Проверяем наличие Makefile
 if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
-  cp -r $AppFullName/.MakeFile.alsycpmake Makefile
+  cp -r $AppFullName/.Makefile.alsycpmake Makefile
 fi
 #FIX BUG:1 END
 
@@ -123,8 +123,12 @@ make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullN
 
 #Также проверим логи, иногда в процессе установки возникают ошибки
 if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
-  echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
-  exit
+  if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
+    echo "Error ignored!"
+  else
+    echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
+    exit
+  fi  
 fi
 
 #Перед установкой очищаем от предыдущих установок
@@ -148,8 +152,12 @@ fi
 
 #Также проверим логи, иногда в процессе установки возникают ошибки
 if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error 2>/dev/null)" != "" ]; then
-  echo "Error: Installation finished with error! Look setup_install_err.log for more info!"
-  exit
+  if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
+    echo "Error ignored!"
+  else  
+    echo "Error: Installation finished with error! Look setup_install_err.log for more info!"
+    exit
+  fi  
 fi
 
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
