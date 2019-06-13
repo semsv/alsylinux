@@ -20,6 +20,7 @@ version=1.0.2
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
+# В версии 1.0.3 изменен способ копирования содержимого собранной программы, вместо копирования программы в /usr и /usr/local в этих директориях создаются символьные ссылки
 AppFullName="$1"                                           # Полный путь и имя файла
 AppName="$(basename "$1")"                                 # Только имя файла без пути
 NumberAlsyBundleFile="$2"                                  # Номер файла Alsy Bundle
@@ -200,9 +201,34 @@ if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib 2>/dev/null)" != "" ];
 fi
 
 #Теперь копируем содержимое папки программы в "корень"^1 и в "/usr"^2 и в "/usr/local"
-cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
-cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
-cp -r .new_install/$AppPrefix/$AppName/* .new_install
+#cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
+#cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
+#cp -r .new_install/$AppPrefix/$AppName/* .new_install
+mkdir -p .new_install/usr/local/bin
+mkdir -p .new_install/usr/local/sbin
+mkdir -p .new_install/usr/local/lib
+mkdir -p .new_install/usr/local/lib64
+mkdir -p .new_install/usr/local/share
+
+mkdir -p .new_install/usr/bin
+mkdir -p .new_install/usr/sbin
+mkdir -p .new_install/usr/lib
+mkdir -p .new_install/usr/lib64
+mkdir -p .new_install/usr/share
+
+ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/local/bin
+ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/local/sbin
+ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/local/lib
+ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/local/lib64
+ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/local/share
+
+ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/bin
+ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/sbin
+ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/lib
+ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/lib64
+ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/share
+
+cp -rLd .new_install/$AppPrefix/$AppName/* .new_install
 
 #Теперь - финальная стадия - создаем файл Alsy Bundle
 dir2sb .new_install $2-ALSY.$AppName.ab
