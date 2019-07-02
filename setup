@@ -204,28 +204,33 @@ fi
 #cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
 #cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
 #cp -r .new_install/$AppPrefix/$AppName/* .new_install
+
 mkdir -p .new_install/usr/local/bin
 mkdir -p .new_install/usr/local/sbin
 mkdir -p .new_install/usr/local/lib
 mkdir -p .new_install/usr/local/lib64
+mkdir -p .new_install/usr/local/include
 mkdir -p .new_install/usr/local/share
 
 mkdir -p .new_install/usr/bin
 mkdir -p .new_install/usr/sbin
 mkdir -p .new_install/usr/lib
 mkdir -p .new_install/usr/lib64
+mkdir -p .new_install/usr/include
 mkdir -p .new_install/usr/share
 
 ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/local/bin
 ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/local/sbin
 ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/local/lib
 ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/local/lib64
+ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/local/include
 ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/local/share
 
 ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/bin
 ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/sbin
 ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/lib
 ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/lib64
+ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/include
 ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/share
 
 cp -rLd .new_install/$AppPrefix/$AppName/* .new_install
