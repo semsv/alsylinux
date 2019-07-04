@@ -69,7 +69,7 @@ if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
 fi
 
 #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
-if [ "$(ls -1 | grep Makefile 2>/dev/null)" != "" ]; then 
+if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
  make clean >>$AppFullName/setup_all.log 2>/dev/null
 #FIX BUG:1 BEGIN
 #Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
@@ -100,13 +100,13 @@ fi
 
 #FIX BUG:1 BEGIN
 #Проверяем наличие Makefile
-if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
+if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
   cp -r $AppFullName/.Makefile.alsycpmake Makefile
 fi
 #FIX BUG:1 END
 
 #Проверяем наличие Makefile
-if [ "$(ls -1 | grep Makefile 2>/dev/null)" == "" ]; then 
+if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
   echo "$(less ALSYBUILDPATH)"
   ALSYBUILDPATH="$(less ALSYBUILDPATH)"
   if [ "$ALSYBUILDPATH" == "" ]; then
