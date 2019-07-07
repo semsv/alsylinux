@@ -44,12 +44,60 @@ then
   echo $AppFullName
   if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.xz"$" )" != "" ];
   then
-#    tar xf $AppFullName
+
    copylen="0"
    RAR_NAME="$(basename $AppFullName)"
    echo $RAR_NAME
    
    length_str1="$(expr length ".tar.xz")"
+   length_str2="$(expr length $RAR_NAME)"
+   let copylen=length_str2-length_str1
+   result_str=${RAR_NAME:0:$copylen}
+   echo $result_str
+   
+   length_str1="$(expr length $RAR_NAME)"
+   length_str2="$(expr length $AppFullName)"     
+   let copylen=length_str2-length_str1   
+   result_str2=${AppFullName:0:$copylen}   
+   
+   AppFullName="$result_str2"$result_str
+   echo $AppFullName
+   
+   tar -xf "$result_str2"$RAR_NAME
+   cp -r "$result_str2"$RAR_NAME $AppFullName
+  fi
+  if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.bz2"$" )" != "" ];
+  then
+
+   copylen="0"
+   RAR_NAME="$(basename $AppFullName)"
+   echo $RAR_NAME
+   
+   length_str1="$(expr length ".tar.bz2")"
+   length_str2="$(expr length $RAR_NAME)"
+   let copylen=length_str2-length_str1
+   result_str=${RAR_NAME:0:$copylen}
+   echo $result_str
+   
+   length_str1="$(expr length $RAR_NAME)"
+   length_str2="$(expr length $AppFullName)"     
+   let copylen=length_str2-length_str1   
+   result_str2=${AppFullName:0:$copylen}   
+   
+   AppFullName="$result_str2"$result_str
+   echo $AppFullName
+   
+   tar -xf "$result_str2"$RAR_NAME
+   cp -r "$result_str2"$RAR_NAME $AppFullName
+  fi  
+  if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.gz"$" )" != "" ];
+  then
+
+   copylen="0"
+   RAR_NAME="$(basename $AppFullName)"
+   echo $RAR_NAME
+   
+   length_str1="$(expr length ".tar.gz")"
    length_str2="$(expr length $RAR_NAME)"
    let copylen=length_str2-length_str1
    result_str=${RAR_NAME:0:$copylen}
@@ -87,9 +135,10 @@ echo "$AppName" >>$AppFullName/setup_all.log
 echo "$NumberAlsyBundleFile" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-if [ "$Options" == "-x" ]; then
+if [ "$Options" == "-x" ]; then  
   AppConfigScenario="config.sh"
   ConfigureFile="$AppConfigScenario"
+  echo $AppConfigScenario
 else
   if [ "$(ls -1 | grep --regexp=autogen.sh"$" 2>/dev/null)" != "" ]; then
     AppConfigScenario="autogen.sh"
@@ -130,6 +179,9 @@ echo "**************************************************************************
 
 #Выполняем конфигурацию программы
 #./configure --prefix=$AppPrefix/$AppName
+if [ "$Options" == "-d" ]; then  \
+  echo "disabled configure"
+else
 ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
 if [ "$ConfigureFile" == "autogen.sh" ]; then
 #After run autogen.sh if true: Now you are ready to run ./configure
@@ -137,7 +189,7 @@ if [ "$ConfigureFile" == "autogen.sh" ]; then
   ConfigureFile="configure"
 ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
 fi
-
+fi
 #FIX BUG:1 BEGIN
 #Проверяем наличие Makefile
 if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
