@@ -3,8 +3,8 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.3                                                                                      ###
-###   Дата последнего изменения: 13 июня 2019 20:35 четверг                                              ###
+###   Версия: 1.0.5                                                                                      ###
+###   Дата последнего изменения: 07 июля 2019 15:55 воскресенье                                          ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -16,11 +16,14 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.3
+version=1.0.5
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
 # В версии 1.0.3 изменен способ копирования содержимого собранной программы, вместо копирования программы в /usr и /usr/local в этих директориях создаются символьные ссылки
+# В версии 1.0.4 добавлен copyflag
+# В версии 1.0.5 добавлена новая возможность сборки из архивного файла
+copyflag="1" 
 AppFullName="$1"                                           # Полный путь и имя файла
 AppName="$(basename "$1")"                                 # Только имя файла без пути
 NumberAlsyBundleFile="$2"                                  # Номер файла Alsy Bundle
@@ -28,6 +31,43 @@ Options="$3"                                               # Опции для s
 AppPrefix="/usr/src/tools"                                 # Где в итоге будет программа !!! Внимание! Не меняйте данную директорию на системную, типа "/", "/lib64", "/usr" и т.д.
 AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий конфигурации 
 ConfigureFile="configure"
+CurrDir="$(pwd)"
+
+# Для версии 1.0.5 Здесь добавлена возможность сборки программы из архивного файла,
+# Например так: setup util-linux-2.30.tar.xz 5060
+# Для правильного выполнения такой команды необх находится в директории где лежит файл "util-linux-2.30.tar.xz"
+# Начало:
+check_path=${AppFullName:0:1}
+if [ "$(echo "$check_path")" != '/' ];
+then
+  AppFullName=$CurrDir/"$AppFullName"
+  echo $AppFullName
+  if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.xz"$" )" != "" ];
+  then
+#    tar xf $AppFullName
+   copylen="0"
+   RAR_NAME="$(basename $AppFullName)"
+   echo $RAR_NAME
+   
+   length_str1="$(expr length ".tar.xz")"
+   length_str2="$(expr length $RAR_NAME)"
+   let copylen=length_str2-length_str1
+   result_str=${RAR_NAME:0:$copylen}
+   echo $result_str
+   
+   length_str1="$(expr length $RAR_NAME)"
+   length_str2="$(expr length $AppFullName)"     
+   let copylen=length_str2-length_str1   
+   result_str2=${AppFullName:0:$copylen}   
+   
+   AppFullName="$result_str2"$result_str
+   echo $AppFullName
+   
+   tar -xf "$result_str2"$RAR_NAME
+   cp -r "$result_str2"$RAR_NAME $AppFullName
+  fi
+fi
+#Конец:
 
 #Удаляем все логи от предыдущих сборок из исходников программы
 rm -r $AppFullName/setup_all.log 2>/dev/null
@@ -51,7 +91,7 @@ if [ "$Options" == "-x" ]; then
   AppConfigScenario="config.sh"
   ConfigureFile="$AppConfigScenario"
 else
-  if [ "$(ls -1 | grep autogen 2>/dev/null)" != "" ]; then
+  if [ "$(ls -1 | grep --regexp=autogen.sh"$" 2>/dev/null)" != "" ]; then
     AppConfigScenario="autogen.sh"
     ConfigureFile="$AppConfigScenario"
   fi
@@ -201,38 +241,38 @@ if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib 2>/dev/null)" != "" ];
 fi
 
 #Теперь копируем содержимое папки программы в "корень"^1 и в "/usr"^2 и в "/usr/local"
-#cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
-#cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
-#cp -r .new_install/$AppPrefix/$AppName/* .new_install
+if [ "$copyflag" == "1" ]; then
+  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
+  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
+else
+  mkdir -p .new_install/usr/local/bin
+  mkdir -p .new_install/usr/local/sbin
+  mkdir -p .new_install/usr/local/lib
+  mkdir -p .new_install/usr/local/lib64
+  mkdir -p .new_install/usr/local/include
+  mkdir -p .new_install/usr/local/share
 
-mkdir -p .new_install/usr/local/bin
-mkdir -p .new_install/usr/local/sbin
-mkdir -p .new_install/usr/local/lib
-mkdir -p .new_install/usr/local/lib64
-mkdir -p .new_install/usr/local/include
-mkdir -p .new_install/usr/local/share
+  mkdir -p .new_install/usr/bin
+  mkdir -p .new_install/usr/sbin
+  mkdir -p .new_install/usr/lib
+  mkdir -p .new_install/usr/lib64
+  mkdir -p .new_install/usr/include
+  mkdir -p .new_install/usr/share
 
-mkdir -p .new_install/usr/bin
-mkdir -p .new_install/usr/sbin
-mkdir -p .new_install/usr/lib
-mkdir -p .new_install/usr/lib64
-mkdir -p .new_install/usr/include
-mkdir -p .new_install/usr/share
+  ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/local/bin
+  ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/local/sbin
+  ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/local/lib
+  ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/local/lib64
+  ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/local/include
+  ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/local/share
 
-ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/local/bin
-ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/local/sbin
-ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/local/lib
-ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/local/lib64
-ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/local/include
-ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/local/share
-
-ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/bin
-ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/sbin
-ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/lib
-ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/lib64
-ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/include
-ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/share
-
+  ln -s -r .new_install/$AppPrefix/$AppName/bin/*   .new_install/usr/bin
+  ln -s -r .new_install/$AppPrefix/$AppName/sbin/*  .new_install/usr/sbin
+  ln -s -r .new_install/$AppPrefix/$AppName/lib/*   .new_install/usr/lib
+  ln -s -r .new_install/$AppPrefix/$AppName/lib64/* .new_install/usr/lib64
+  ln -s -r .new_install/$AppPrefix/$AppName/include/* .new_install/usr/include
+  ln -s -r .new_install/$AppPrefix/$AppName/share/* .new_install/usr/share
+fi
 cp -rLd .new_install/$AppPrefix/$AppName/* .new_install
 
 #Теперь - финальная стадия - создаем файл Alsy Bundle
