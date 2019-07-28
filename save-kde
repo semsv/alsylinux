@@ -10,6 +10,7 @@ command_name="save-kde"
 dirsave="$1"
 modulename="$2"
 option_p1="$3"
+user="alesya"
 
 if [ "$dirsave" == "" ]; then
   dirsave="/usr/src/kde"
@@ -41,6 +42,13 @@ mkdir -p $dirsave/root
 mkdir -p $dirsave/usr
 mkdir -p $dirsave/usr/share
 mkdir -p $dirsave/etc
+
+mkdir -p $dirsave/home/$user
+cp -rLd /home/$user/.kde $dirsave/home/$user
+cp -rLd /home/$user/.config $dirsave/home/$user
+cp -rLd /home/$user/.local $dirsave/home/$user
+chown -R $user:$user $dirsave/home/$user
+
 cp -rLd /root/.kde $dirsave/root
 cp -rLd /root/.config $dirsave/root
 cp -rLd /root/.local $dirsave/root
