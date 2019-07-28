@@ -1,10 +1,13 @@
 #/bin/sh
-###############################################
-##  Скрипт сохранения настроек KDE           ##
-##  Автор:  Севастьянов Семен                ##
-##  Дата:   2019 01 июнь                     ##               
-##  Версия: 1.0                              ##  
-###############################################
+##################################################
+##  Скрипт сохранения настроек KDE              ##
+##  Автор:  Севастьянов Семен                   ##
+##  Дата:   2019 01 июнь                        ##               
+##  Версия: 1.0.1                               ##  
+##  Дата последней коррекции: 2019-28-июля(07)  ##
+##################################################
+# В версии 1.0.1 положено начало для сохранения помимо настроек root пользователя, 
+# сохранения настроек дополнительного пользователя и его домашней папки
 
 command_name="save-kde"
 dirsave="$1"
@@ -43,11 +46,14 @@ mkdir -p $dirsave/usr
 mkdir -p $dirsave/usr/share
 mkdir -p $dirsave/etc
 
-mkdir -p $dirsave/home/$user
-cp -rLd /home/$user/.kde $dirsave/home/$user
-cp -rLd /home/$user/.config $dirsave/home/$user
-cp -rLd /home/$user/.local $dirsave/home/$user
-chown -R $user:$user $dirsave/home/$user
+if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
+  mkdir -p $dirsave/home/$user
+  cp -rLd /home/$user $dirsave/home
+  cp -rLd /home/$user/.kde $dirsave/home/$user
+  cp -rLd /home/$user/.config $dirsave/home/$user
+  cp -rLd /home/$user/.local $dirsave/home/$user
+  chown -R $user:$user $dirsave/home/$user
+fi
 
 cp -rLd /root/.kde $dirsave/root
 cp -rLd /root/.config $dirsave/root
