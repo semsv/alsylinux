@@ -499,25 +499,26 @@ activate()
 #
 deactivate()
 {
-   local BUNDLES SB MATCH LOOP LOOPFILE
+   local BUNDLES SB AB NSB MATCH LOOP LOOPFILE
 
    BUNDLES=$LIVE/bundles
    MODULES=$LIVE/modules
    SB="$(basename "$1")"
-
-   rmdir "$BUNDLES/$SB" 2>/dev/null    # this fails unless the dir is
-   rmdir "$BUNDLES/$SB.sb" 2>/dev/null # forgotten there empty. It's safe this way
-
+   AB=".ab"
+   NSB="${SB%.*}"
+   
+   rm -rd "$BUNDLES/$SB" 2>/dev/null    # this fails unless the dir is
+   rm -rd "$BUNDLES/$NSB" 2>/dev/null # forgotten there empty. It's safe this way
+   
    if [ ! -d "$BUNDLES/$SB" ]; then
       # we don't have real filename match, lets try to add .sb extension
-      if [ ! -d "$BUNDLES/$SB.sb" ]; then
-         # no, still no match. Lets use some guesswork
-         SB=$(print_branches | cut -f 2 | egrep -o "/[0-9]+-$SB.sb\$" | tail -n 1 | xargs -r basename)
+      if [ ! -d "$BUNDLES/$NSB" ]; then
+        die "can't find active alsy bundle $1"
       else
-         SB="$SB.sb"
+         SB="$NSB"
       fi
    fi
-
+   
    if [ "$SB" = "" -o ! -d "$BUNDLES/$SB" ]; then
       die "can't find active alsy bundle $1"
    fi
@@ -546,10 +547,11 @@ deactivate()
    # free the loop device manually since umount fails to do that if the bundle was activated on boot
    losetup -d "$LOOP" 2>/dev/null
 
-   # remove the .sb file, but keep it if deactivate was issued on full sb real path
-   if [ "$(realpath "$1")" != "$(realpath "$LOOPFILE")" ]; then
-      rm -f "$LOOPFILE"
-   fi
+   # remove the .ab file, but keep it if deactivate was issued on full ab real path
+#  if [ "$(realpath "$1")" != "$(realpath "$LOOPFILE")" ]; then
+      mkdir -p "$MODULES/deactivate"
+      mv -v "$LOOPFILE" "$MODULES/deactivate/"
+#   fi
 
    echo "Alsy Bundle deactivated: $SB"
    if [ "$GUI" ]; then
