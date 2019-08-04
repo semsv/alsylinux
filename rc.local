@@ -62,7 +62,8 @@ chmod u+s /usr/local/bin/sudo
 sudo chmod 4755 /usr/lib64/chromium/chrome-sandbox
 
 # Настройка команд для пользователей не root 
-ln -s /sbin/* /usr/bin/
+ln -s /sbin/* /usr/bin/ 2>/dev/null
+ln -s /usr/sbin/* /usr/bin/ 2>/dev/null
 
 # Настройка выключения компьютера
 echo "poweroff -i -f" > /etc/cron.daily/poweroff
