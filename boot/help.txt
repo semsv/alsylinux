@@ -1,1 +1,29 @@
-Это файл помощи в установке операционной системы AlsyLinux
+RU: Это файл помощи в установке операционной системы AlsyLinux
+EN: This is the help file for installing the AlsyLinux operating system.
+
+Welcome to AlsyLinux v1.0.3 X86_64
+
+ The boot menu offers several options, toggle them by [Space] key.
+ If you need to edit boot command line (for advanced users), hit [Tab].
+ When finished, navigate to "ALSYLINUX" menu row and press [Enter].
+
+
+ Persistent changes
+
+ Save all ALSYLINUX filesystem modifications to /boot/changes/ and restore
+ those changes next time you boot. Only usable while running ALSYLINUX from a
+ writable media such as USB device or hard disk.
+
+
+ Copy to RAM
+
+ Copies all data (entire /ALSYLINUX/ directory) to memory during ALSYLINUX startup
+ so you can eject the boot device. Make sure to uncheck persistent changes
+ (see above) else your boot device will be still in use.
+
+
+ Act as PXE server
+
+ As soon as ALSYLINUX is started, it runs DHCP and TFTP services at background
+ to allow other computers on your network to boot ALSYLINUX from net over PXE.
+This may be useful in classrooms.
