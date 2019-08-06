@@ -33,6 +33,54 @@ AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий к
 ConfigureFile="configure"
 CurrDir="$(pwd)"
 
+# Для версии 1.0.6 Добавлена возможность обхода всех папок программы и создания символьных ссылок на файлы
+create_link()
+{
+CRT_LINK_PATH="$1"
+echo "" > files.dat
+
+for DIR__ in $( ls -l -R "$CRT_LINK_PATH" | grep -E ':$' ) 
+ do               
+   DIR__="${DIR__%:*}"
+   logic_create_dir="1"
+   for FILE__ in $( ls "$DIR__/" ) 
+     do
+       if [ "$(ls -1 "$DIR__/$FILE__" | wc -l)" == "1" ]; then
+         if [ "$(basename "$(ls -1 $DIR__/$FILE__)")" == "$FILE__" ]; then
+           leng_str1="$(expr length $CRT_LINK_PATH)"
+           leng_str2="$(expr length $DIR__/$FILE__)"
+                     
+           let cpl=leng_str2-leng_str1
+           let pos=leng_str2-cpl                     
+           
+           fls="$DIR__/$FILE__"
+           res_str=${fls:$pos:$cpl}
+           
+           cpl="$(expr length $res_str)"
+           let cpl=cpl-1
+           res_str2="${res_str:1:$cpl}"
+           
+#########################
+## For create dir:
+#########################
+if [ "$logic_create_dir" == "1" ]; then
+logic_create_dir="0"
+           rlfile="$(basename $2/$res_str2)"
+           rlpath="$2/$res_str2"
+           l1="$(expr length $rlfile)"
+           l2="$(expr length $rlpath)"
+           let cpl=l2-l1
+           rlpath=${rlpath:0:cpl}           
+           echo "mkdir -p $rlpath" >> files.dat
+fi
+           echo "ln -s $res_str" "$2/$res_str2" >> files.dat
+##########################
+         fi
+       fi
+     done
+ done
+}
+
 # Для версии 1.0.5 Здесь добавлена возможность сборки программы из архивного файла,
 # Например так: setup util-linux-2.30.tar.xz 5060
 # Для правильного выполнения такой команды необх находится в директории где лежит файл "util-linux-2.30.tar.xz"
@@ -296,6 +344,9 @@ fi
 if [ "$copyflag" == "1" ]; then
   cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
   cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
+  
+  create_link( ".new_install/$AppPrefix/$AppName" ".new_install/usr/local" )
+  
 else
   mkdir -p .new_install/usr/local/bin
   mkdir -p .new_install/usr/local/sbin
