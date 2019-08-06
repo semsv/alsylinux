@@ -345,7 +345,7 @@ if [ "$copyflag" == "1" ]; then
   cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
   cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
   
-  create_link( ".new_install/$AppPrefix/$AppName" ".new_install/usr/local" )
+  create_link ".new_install/$AppPrefix/$AppName" ".new_install/usr/local"
   
 else
   mkdir -p .new_install/usr/local/bin
