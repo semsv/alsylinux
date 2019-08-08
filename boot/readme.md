@@ -21,12 +21,6 @@ Welcome to AlsyLinux v1.0.3 X86_64
  (see above) else your boot device will be still in use.
 
 
- Act as PXE server
-
- As soon as ALSYLINUX is started, it runs DHCP and TFTP services at background
- to allow other computers on your network to boot ALSYLINUX from net over PXE.
-This may be useful in classrooms.
-
 RU: Это файл помощи в установке операционной системы AlsyLinux
 
 Добро пожаловать в AlsyLinux v1.0.3 X86_64
