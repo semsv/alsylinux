@@ -9,7 +9,10 @@ mkdir build                                          &&
 cd    build                                          &&
 
 ../configure                                         \
-    --prefix=/usr                                    \
+    --prefix=/usr/src/tools/gcc-7.3.0                \
     --disable-multilib                               \
     --with-system-zlib                               \
+    --target=x86_64-alsy-linux                       \
+    --build=x86_64-alsy-linux                        \
+    --host=x86_64-alsy-linux                         \
     --enable-languages=c,c++,fortran,go,objc,obj-c++
