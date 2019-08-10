@@ -45,6 +45,9 @@ mkdir -p $dirsave/root
 mkdir -p $dirsave/usr
 mkdir -p $dirsave/usr/share
 mkdir -p $dirsave/etc
+mkdir -p $dirsave/var/tmp
+mkdir -p $dirsave/tmp
+mkdir -p $dirsave/usr/share/apps/kdm
 
 if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
   mkdir -p $dirsave/home/$user
@@ -58,12 +61,21 @@ fi
 cp -rLd /root/.kde $dirsave/root
 cp -rLd /root/.config $dirsave/root
 cp -rLd /root/.local $dirsave/root
+cp -rLd /var/tmp $dirsave/var
+cp -rLd /tmp $dirsave
+
+chmod 1777 $dirsave/var/tmp
+chmod 1777 $dirsave/tmp
+chmod 1777 $dirsave/tmp/.ICE-unix
+chmod 1777 $dirsave/tmp/.X11-unix
+
 # Очистка корзины
 rm -r $dirsave/root/.local/share/Trash/files/*
 # Копируем данные KDE
 cp -rLd /usr/share/kde4 $dirsave/usr/share
 cp -rLd /usr/share/config $dirsave/usr/share
 cp -rLd /etc/kde $dirsave/etc
+cp -rLd /usr/share/apps/kdm $dirsave/usr/share/apps
 
 if [ "$option_p1" == "-a" ]; then
   echo "script completed successfully"
