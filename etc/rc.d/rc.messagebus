@@ -1,0 +1,146 @@
+#!/bin/sh
+#
+# messagebus:   The D-BUS systemwide message bus
+#
+# chkconfig: 345 97 03
+# description:  This is a daemon which broadcasts notifications of system events \
+#               and other messages. See http://www.freedesktop.org/software/dbus/
+#
+# processname: dbus-daemon
+# pidfile: /var/run/dbus/pid
+#
+
+# Sanity checks.
+#[ -x /usr/src/tools/dbus-1.10.22/bin/dbus-daemon ] || exit 0
+
+# Source function library.
+#. /etc/rc.d/init.d/functions
+
+# so we can rearrange this easily
+#processname=dbus-daemon
+#servicename=messagebus
+
+#RETVAL=0
+
+start() {
+
+if [ "$(less /etc/group | grep polkitd)" == "" ]; then
+echo "Alsy setup polkit........"
+# Настройка polkit
+chmod -v 4755 /usr/src/tools/polkit-0.116/lib/polkit-1/polkit-agent-helper-1
+chmod -v 4755 /lib/polkit-1/polkit-agent-helper-1
+chmod -v 4755 /lib64/polkit-1/polkit-agent-helper-1
+chmod -v 4755 /usr/lib/polkit-1/polkit-agent-helper-1
+chmod -v 4755 /usr/lib64/polkit-1/polkit-agent-helper-1
+if [ -f /sbin/pkexec ]; then
+chmod -v 4755 /sbin/pkexec
+fi
+chmod -v 4755 /bin/pkexec
+chmod -v 4755 /usr/bin/pkexec
+chmod -v 4755 /usr/src/tools/polkit-0.116/bin/pkexec
+
+chmod 700 /etc/polkit-1/rules.d
+group_id="28"
+groupadd -fg $group_id polkitd &&
+useradd -c "PolicyKit Daemon Owner" -d /etc/polkit-1 -u $group_id \
+        -g polkitd -s /bin/false polkitd
+usermod -a -G polkitd alesya
+fi
+
+    #********** BEG BLOCK 1: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
+    #>>>> A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
+    dbus_run_already="0"
+    echo "*** ALESYA (ALSY) LINUX: $(less /etc/alsy-version) ****"
+    echo "*** ALSY - Starting system message bus..."
+    echo "**********************************"    
+    if [ "`pgrep dbus-daemon`" = "" ]; then # ru: Собственно просто проверяем что D-BUS еще не запущен
+      echo "*** ALSY - remove dbus temporary files..."
+      # ru: Убрать след две строки и перезапустить D-BUS можно будет только перезагрузив компьютер
+      rm -r /var/run/dbus/pid 2>/dev/null
+      rm -r /var/run/dbus/dbus.pid 2>/dev/null
+      # ru: теперь если мы хотим без перезагрузки компьютера, остановить D-BUS, и запустить его заново, мы можем использовать цепочку команд INIT 1 -> INIT 4
+      dbus_run_already="1"
+    fi
+    # ru: Тонкая настройка напильничком:) убрать следующие две строки и про функции автомонтирования в KDE можно забыть навсегда и долго лазить по форумам...
+    chown root:messagebus /usr/src/tools/dbus-1.10.22/libexec/dbus-daemon-launch-helper;
+    #chown root:messagebus /usr/src/tools/dbus-1.10.22/bin/dbus-uuidgen
+    #chown root:messagebus /usr/src/tools/dbus-1.10.22/bin/dbus-daemon
+    chmod 4750 /usr/src/tools/dbus-1.10.22/libexec/dbus-daemon-launch-helper;
+    #chmod 1777 /usr/src/tools/dbus-1.10.22/bin/dbus-uuidgen
+    #chmod 1777 /usr/src/tools/dbus-1.10.22/bin/dbus-daemon
+    #
+    echo "$(dbus-daemon --version | grep -i bus)" # ru: Выводим версию DBUS, такая фишка вот от Alsy Linux
+    echo "**********************************"
+    #<<<< End: A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
+    #********** END BLOCK 1: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
+    if [ "$(echo "$dbus_run_already")" == "1" ];
+    then
+      echo -e "*** ALSY - Start Message Bus ..................................\e[32m[OK]\e[0m ***"
+      if [ -x /usr/src/tools/dbus-1.10.22/bin/dbus-uuidgen ] ; then
+         /usr/src/tools/dbus-1.10.22/bin/dbus-uuidgen --ensure
+      fi
+
+      if [ -x /usr/src/tools/dbus-1.10.22/bin/dbus-daemon ];then
+         /usr/src/tools/dbus-1.10.22/bin/dbus-daemon --system
+      fi
+    fi 
+    
+    #********** BEG BLOCK 2: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
+    #>>>> A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
+    # ru: Возможно без этого можно и обойтись, но так было настроено что NetworkManager использует файл "dbus.pid", а D-BUS собран с опцией хранить файл в "pid"
+    # ru: поэтому я решил, что уж проще скопировать файл, чем пересобирать D-BUS...
+    # ru: Но главная причина на самом деле в том, что D-BUS рекомендовано собирать с опцией, хранения pid файла в "/var/run/dbus/pid"
+    # ru: так что данная строка также очень важна для правильной работы системы
+    if [ "$(ls -l /var/run/dbus | grep --regexp=pid"$")" != "" ]; 
+    then 
+      cp -r /var/run/dbus/pid /var/run/dbus/dbus.pid 
+    fi  
+    #<<<< A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
+    #********** END BLOCK 2: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
+    
+    #daemon --check $servicename $processname --system
+    #RETVAL=$?
+    #echo
+    #[ $RETVAL -eq 0 ] && touch /var/lock/subsys/$servicename
+}
+
+stop() {
+    echo "Stopping system message bus"
+
+    ## we don't want to kill all the per-user $processname, we want
+    ## to use the pid file *only*; because we use the fake nonexistent 
+    ## program name "$servicename" that should be safe-ish
+    killall dbus-daemon
+    #RETVAL=$?
+    #echo
+    #if [ $RETVAL -eq 0 ]; then
+    #    rm -f /var/lock/subsys/$servicename
+    #    rm -f /var/run/dbus/pid
+    #fi
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $servicename
+        RETVAL=$?
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    reload)
+        echo "Message bus can't reload its configuration, you have to restart it"
+        RETVAL=$?
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|reload}"
+        ;;
+esac
+exit $RETVAL
