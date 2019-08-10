@@ -32,14 +32,19 @@ chmod -v 4755 /lib/polkit-1/polkit-agent-helper-1
 chmod -v 4755 /lib64/polkit-1/polkit-agent-helper-1
 chmod -v 4755 /usr/lib/polkit-1/polkit-agent-helper-1
 chmod -v 4755 /usr/lib64/polkit-1/polkit-agent-helper-1
+
 if [ -f /sbin/pkexec ]; then
 chmod -v 4755 /sbin/pkexec
 fi
+
 chmod -v 4755 /bin/pkexec
 chmod -v 4755 /usr/bin/pkexec
+chmod -v 4755 /usr/local/bin/pkexec
 chmod -v 4755 /usr/src/tools/polkit-0.116/bin/pkexec
 
 chmod 700 /etc/polkit-1/rules.d
+chmod 700 /usr/src/tools/polkit-0.116/etc/polkit-1/rules.d
+
 group_id="28"
 groupadd -fg $group_id polkitd &&
 useradd -c "PolicyKit Daemon Owner" -d /etc/polkit-1 -u $group_id \
