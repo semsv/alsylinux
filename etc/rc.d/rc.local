@@ -57,6 +57,7 @@ sysctl -w vm.user_reserve_kbytes="1048576"
 # Настройка SUDO
 chown root:root /usr/local/bin/sudo
 chmod u+s /usr/local/bin/sudo
+chmod 4755 /bin/su
 
 # Настройка chromium
 sudo chmod 4755 /usr/lib64/chromium/chrome-sandbox
