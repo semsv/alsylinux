@@ -1,1 +1,1 @@
-ftp://gnu.mirror.iweb.com/tar/
+ftp://gnu.mirror.iweb.com/
