@@ -26,7 +26,9 @@ version=1.0.6
 # В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод инф о использовании программы и версии
 copyflag="1" 
 AppFullName="$1"                                           # Полный путь и имя файла
+if [ "$AppFullName" != "-v" ]; then
 AppName="$(basename "$1")"                                 # Только имя файла без пути
+fi
 NumberAlsyBundleFile="$2"                                  # Номер файла Alsy Bundle
 Options="$3"                                               # Опции для setup
 AppPrefix="/usr/src/tools"                                 # Где в итоге будет программа !!! Внимание! Не меняйте данную директорию на системную, типа "/", "/lib64", "/usr" и т.д.
@@ -38,7 +40,13 @@ CurrDir="$(pwd)"
 create_link()
 {
 CRT_LINK_PATH="$1"
-echo "" > files.dat
+SCRIPT_FILE="$3"
+
+if [ "$SCRIPT_FILE" == "" ]; then
+ SCRIPT_FILE="files.dat"
+fi
+
+echo "" > "$SCRIPT_FILE"
 
 for DIR__ in $( ls -l -R "$CRT_LINK_PATH" | grep -E ':$' ) 
  do               
@@ -72,9 +80,9 @@ logic_create_dir="0"
            l2="$(expr length $rlpath)"
            let cpl=l2-l1
            rlpath=${rlpath:0:cpl}           
-           echo "mkdir -p $rlpath" >> files.dat
+           echo "mkdir -p $rlpath" >> "$SCRIPT_FILE"
 fi
-           echo "ln -s $res_str" "$2/$res_str2" >> files.dat
+           echo "ln -s $res_str" "$2/$res_str2" >> "$SCRIPT_FILE"
 ##########################
          fi
        fi
@@ -84,12 +92,30 @@ fi
 
 usage()
 {
- echo "usage: setup [source_dir] [nubmer bundle] [-x]"
- echo "for example: setup readline-7.0 0000"
- echo "for example: setup readline-7.0 0000 -x"
- echo "for example: setup /usr/src/alsy-source/readline-7.0 0000"
- echo "for example: setup /usr/src/alsy-source/readline-7.0 0000 -x"
- echo "for get version info, usage: setup --version"
+ echo -e "\e[36m usage:\e[32m setup\e[0m [\e[23msource_dir\e[0m] [nubmer bundle] [<Options>]"
+ echo -e "\e[36m for example:\e[32m setup\e[0m \e[24mreadline-7.0\e[0m 0000"
+ echo -e "\e[36m for example:\e[32m setup\e[0m \e[25mreadline-7.0\e[0m 0000 -x"
+ echo -e "\e[36m for example:\e[32m setup\e[0m \e[26m/usr/src/alsy-source/readline-7.0\e[0m 0000"
+ echo -e "\e[36m for example:\e[32m setup\e[0m \e[27m/usr/src/alsy-source/readline-7.0\e[0m 0000 -x"
+ echo -e "\e[36m for get version info, usage:\e[32m setup\e[0m --version"
+}
+
+version()
+{
+ echo "$version"
+}
+
+help()
+{
+ echo "setup - compile program from source and build alsy bundle"
+ echo ""
+ usage
+ echo ""
+ echo "Options: "
+ echo "  -h,	--help   	display help message and exit"
+ echo "  -v,	--version	display version information and exit"
+ echo "  -x,	--xconfig	setup with non-standard configure from config.sh file"
+ 
 }
 
 if [ "$AppFullName" == "" ]; then
@@ -97,11 +123,23 @@ if [ "$AppFullName" == "" ]; then
   exit 0
 fi
 
-if [ "$AppFullName" == "--version"]; then
+if [ "$AppFullName" == "--version" ]; then
   version
   exit 0
-else if [ "$AppFullName" == "-v"]; then
+fi
+
+if [ "$AppFullName" == "-v" ]; then
   version
+  exit 0
+fi
+
+if [ "$AppFullName" == "--help" ]; then
+  help
+  exit 0
+fi
+
+if [ "$AppFullName" == '-h' ]; then
+  help
   exit 0
 fi
 
@@ -206,6 +244,10 @@ echo "$AppFullName" >>$AppFullName/setup_all.log
 echo "$AppName" >>$AppFullName/setup_all.log
 echo "$NumberAlsyBundleFile" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
+
+if [ "$Options" == "--xconfig" ]; then
+  Options="-x"
+fi
 
 if [ "$Options" == "-x" ]; then  
   AppConfigScenario="config.sh"
@@ -366,11 +408,22 @@ fi
 
 #Теперь копируем содержимое папки программы в "корень"^1 и в "/usr"^2 и в "/usr/local"
 if [ "$copyflag" == "1" ]; then
-  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
-  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
-  
-  create_link ".new_install/$AppPrefix/$AppName" ".new_install/usr/local"
-  
+
+#  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr/local
+#  cp -r .new_install/$AppPrefix/$AppName/* .new_install/usr
+
+# Новшество для версии 1.0.6, вместо копирования создаем символьные ссылки на все файлы для директории ".new_install/usr/local"
+  create_link ".new_install/$AppPrefix/$AppName" ".new_install/usr/local" "alsy.create.link"
+  chmod u+rwx alsy.create.link
+
+# Новшество для версии 1.0.6, вместо копирования создаем символьные ссылки на все файлы ".new_install/usr"
+  create_link ".new_install/$AppPrefix/$AppName" ".new_install/usr" "alsy.create.link.two"
+  chmod u+rwx alsy.create.link.two
+
+# Выполняем заранее подготовленные скрипты
+  ./alsy.create.link
+  ./alsy.create.link.two
+
 else
   mkdir -p .new_install/usr/local/bin
   mkdir -p .new_install/usr/local/sbin
