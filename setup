@@ -90,7 +90,7 @@ usage()
  echo "for example: setup /usr/src/alsy-source/readline-7.0 0000 -x"
 }
 
-if [ $AppFullName == "" ]; then
+if [ "$AppFullName" == "" ]; then
   usage
   exit 0
 fi
