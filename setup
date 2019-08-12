@@ -23,7 +23,7 @@ version=1.0.6
 # В версии 1.0.3 изменен способ копирования содержимого собранной программы, вместо копирования программы в /usr и /usr/local в этих директориях создаются символьные ссылки
 # В версии 1.0.4 добавлен copyflag
 # В версии 1.0.5 добавлена новая возможность сборки из архивного файла
-# В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод 
+# В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод инф о использовании программы и версии
 copyflag="1" 
 AppFullName="$1"                                           # Полный путь и имя файла
 AppName="$(basename "$1")"                                 # Только имя файла без пути
@@ -89,10 +89,19 @@ usage()
  echo "for example: setup readline-7.0 0000 -x"
  echo "for example: setup /usr/src/alsy-source/readline-7.0 0000"
  echo "for example: setup /usr/src/alsy-source/readline-7.0 0000 -x"
+ echo "for get version info, usage: setup --version"
 }
 
 if [ "$AppFullName" == "" ]; then
   usage
+  exit 0
+fi
+
+if [ "$AppFullName" == "--version"]; then
+  version
+  exit 0
+else if [ "$AppFullName" == "-v"]; then
+  version
   exit 0
 fi
 
