@@ -81,6 +81,20 @@ fi
  done
 }
 
+usage()
+{
+ echo "usage: setup [source_dir] [nubmer bundle] [-x]"
+ echo "for example: setup readline-7.0 0000"
+ echo "for example: setup readline-7.0 0000 -x"
+ echo "for example: setup /usr/src/alsy-source/readline-7.0 0000"
+ echo "for example: setup /usr/src/alsy-source/readline-7.0 0000 -x"
+}
+
+if [ $AppFullName == "" ]; then
+  usage
+  exit 0
+fi
+
 # Для версии 1.0.5 Здесь добавлена возможность сборки программы из архивного файла,
 # Например так: setup util-linux-2.30.tar.xz 5060
 # Для правильного выполнения такой команды необх находится в директории где лежит файл "util-linux-2.30.tar.xz"
