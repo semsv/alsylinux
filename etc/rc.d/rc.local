@@ -8,13 +8,27 @@
 # commands in there.
 
 #Убедимся что у нас файл последней версии если нет то скачиваем
-if [ "$(git.synchron /etc/rc.d/rc.local)" != "0" ]; then
-  echo "exit 1"
-  exit 1
-else
-  echo "exit 0"
-  exit 0
+#Проверяем наличие файла git.ignore
+if [ ! -f "/etc/rc.d/git.ignore" ]; then
+ lv_git_syn="$(git.synchron /etc/rc.d/rc.local)"
+ if [ "$lv_git_syn" != "0" ]; then
+   if "$lv_git_syn" != "1" ]; then
+     echo "exit $lv_git_syn"
+     exit "$lv_git_syn"
+   fi
+   # Надо: 1. сохранить старый файл под именем git.ignore 2. скачать свежий файл, 3. запустить его на выполнение и 4. выйти из этого скрипта
+   mv /etc/rc.d/rc.local /etc/rc.d/git.ignore
+   wget -O /etc/rc.d/rc.local "https://github.com/semsv/alsylinux/raw/master/etc/rc.d/rc.local"
+   echo "granted success"
+   exit 1
+ else
+   echo "exit 0"
+   exit 0
+ fi
 fi
+
+echo "git ignore"
+exit
 
 #Проверим сначала что папка есть
 if [ "$(ls -1 /mnt/live/memory/bundles | grep "docbook" 2>/dev/null)" != "" ]; then
