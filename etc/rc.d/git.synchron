@@ -1,0 +1,40 @@
+#!/bin/sh
+
+localfile="$1"
+gitlogin="$2"
+gitproject="$3"
+gitfile="$localfile".git
+
+if [ "$gitlogin" == "" ]; then
+  gitlogin="semsv"
+  gitproject="alsylinux"
+else
+  if [ "$gitproject" == "" ]; then
+    gitproject="alsylinux"
+  fi
+fi
+
+githttpref="https://github.com/$gitlogin/$gitproject/raw/master"
+
+if [ -f "$localfile".md5sum ]; then
+  rm -r "$localfile".md5sum
+  rmmess=""
+fi
+
+if [ -f "$gitfile".md5sum ]; then
+  rm -r "$gitfile".md5sum
+  rmmess=""
+fi
+
+md5sum "$localfile" >> "$localfile".md5sum
+wget -O "$gitfile".md5sum "$githttpref$localfile".md5sum
+
+if [ "$(cat "$localfile".md5sum | cut -d " " -f1)" == "$(cat "$gitfile".md5sum | cut -d " " -f1)" ]; then
+  echo "0"
+  exit 0
+else
+  echo "$(cat "$localfile".md5sum | cut -d " " -f1)"
+  echo "$(cat "$gitfile".md5sum   | cut -d " " -f1)"
+  echo "$githttpref$localfile"
+  exit 1
+fi
