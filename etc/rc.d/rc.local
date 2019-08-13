@@ -13,9 +13,9 @@
 if [ ! -f "/etc/rc.d/git.ignore" ]; then
  lv_git_syn="$(git.synchron /etc/rc.d/rc.local)"
  if [ "$lv_git_syn" != "0" ]; then
-   if "$lv_git_syn" != "1" ]; then
+   if [ "$lv_git_syn" != "1" ]; then
      echo "exit $lv_git_syn"
-     exit "$lv_git_syn"
+     exit 2
    fi
    # Надо: 1. сохранить старый файл под именем git.ignore 2. скачать свежий файл, 3. запустить его на выполнение и 4. выйти из этого скрипта
    mv /etc/rc.d/rc.local /etc/rc.d/git.ignore
