@@ -9,6 +9,7 @@
 
 #Убедимся что у нас файл последней версии если нет то скачиваем
 #Проверяем наличие файла git.ignore
+
 if [ ! -f "/etc/rc.d/git.ignore" ]; then
  lv_git_syn="$(git.synchron /etc/rc.d/rc.local)"
  if [ "$lv_git_syn" != "0" ]; then
