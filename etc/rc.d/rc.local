@@ -26,7 +26,9 @@ else
  fi
 fi
 
-/etc/init.d/cups start
+if [ -x /etc/init.d/cups ]; then
+  /etc/init.d/cups start
+fi
 
 if [ "$(ls -1 /mnt/live/memory/bundles | grep "glib-2.61.1" 2>/dev/null)" != "" ]; then
   echo -e "GLIB-2.61.1 ........................................\e[32m[OK]\e[0m"
@@ -43,11 +45,11 @@ if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; the
   swapon /mnt/live/memory/data/tmp.swap -p 32767
 fi
 # Меняем настройки ядра для ограничения по доступной оперативной памяти (чтобы исключить полного зависания при исчерпании физ памяти)
-sysctl -w vm.overcommit_memory="0"
-sysctl -w vm.overcommit_kbytes="1048576"
-sysctl -w vm.overcommit_ratio="350"
 sysctl -w vm.overcommit_memory="1"
-sysctl -w vm.user_reserve_kbytes="1048576"
+sysctl -w vm.overcommit_kbytes="4096000"
+sysctl -w vm.overcommit_ratio="330"
+sysctl -w vm.overcommit_memory="2"
+sysctl -w vm.user_reserve_kbytes="102400" # 100 MB
 #echo 'sysctl -w vm.overcommit_memory="2"' >> /etc/cron.hourly/sysctl
 #echo 'mv /etc/cron.hourly/sysctl /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
 #echo 'chmod 0 /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
@@ -60,9 +62,12 @@ chmod u+s /usr/local/bin/sudo
 chmod 4755 /bin/su
 
 # Настройка chromium
-sudo chmod 4755 /usr/lib64/chromium/chrome-sandbox
+chmod 4755 /usr/lib64/chromium/chrome-sandbox
 
-# Настройка команд для пользователей не root 
+# Настройка NetworkManager Client
+chmod 4755 /usr/bin/nmcli
+
+# Настройка команд для пользователей не root
 ln -s /sbin/* /usr/bin/ 2>/dev/null
 ln -s /usr/sbin/* /usr/bin/ 2>/dev/null
 
