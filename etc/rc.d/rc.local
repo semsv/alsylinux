@@ -7,7 +7,7 @@
 # make an /etc/rc.d/rc.local_shutdown script and put those
 # commands in there.
 
-#Убедимся что у нас файл последней версии если нет то скачиваем
+#Убедимся, что у нас файл последней версии если нет то скачиваем
 #Проверяем наличие файла git.ignore
 
 if [ ! -f "/etc/rc.d/git.ignore" ]; then
