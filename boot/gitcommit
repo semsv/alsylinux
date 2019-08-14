@@ -1,0 +1,9 @@
+#!/bin/sh
+
+for curfile in $(ls -1)
+do
+  if [ -f $curfile ]; then
+    git add $curfile
+    echo $curfile
+  fi
+done
