@@ -115,7 +115,7 @@ help()
  echo "  -h,	--help   	display help message and exit"
  echo "  -v,	--version	display version information and exit"
  echo "  -x,	--xconfig	setup with non-standard configure from config.sh file"
- 
+ echo "  -n,	--not-configure	execute "setup" command without configure file"
 }
 
 if [ "$AppFullName" == "" ]; then
@@ -245,6 +245,10 @@ echo "$AppName" >>$AppFullName/setup_all.log
 echo "$NumberAlsyBundleFile" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
+if [ "$Options" == "--not-configure" ]; then
+  Options="-n"
+fi
+
 if [ "$Options" == "--xconfig" ]; then
   Options="-x"
 fi
@@ -271,56 +275,64 @@ if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
  exit
 fi
 
-#Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
-if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
- make clean >>$AppFullName/setup_all.log 2>/dev/null
+if [ "$Options" != "-n" ]; then
+  #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
+    make clean >>$AppFullName/setup_all.log 2>/dev/null
 #FIX BUG:1 BEGIN
-#Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
-#соотв здесь он просто удалялся и все как говорится, привет на этом, поэтому решено предварительно его копировать здесь в файл
-#с именем .MakeFile.alsycpmake
- cp -r Makefile $AppFullName/.Makefile.alsycpmake 2>/dev/null
-#что нам это дает? 
-#А дает нам это то, что теперь после того как выполнится конфигурация 
-#и мы увидем ситуацию когда ошибок нет, 
-#а при этом файл MakeFile отсутствует (чего быть не должно если конфига родная и/или правильная) то мы в таком случае его сможем восстановить 
+#  Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
+#  соотв здесь он просто удалялся и все как говорится, привет на этом, поэтому решено предварительно его копировать здесь в файл
+#  с именем .MakeFile.alsycpmake
+
+    cp -r Makefile $AppFullName/.Makefile.alsycpmake 2>/dev/null
+    
+#  что нам это дает? 
+#  А дает нам это то, что теперь после того как выполнится конфигурация 
+#  и мы увидем ситуацию когда ошибок нет, 
+#  а при этом файл MakeFile отсутствует (чего быть не должно если конфига родная и/или правильная) то мы в таком случае его сможем восстановить 
 #FIX BUG:1 END
- rm -r Makefile 2>/dev/null
+
+    rm -r Makefile 2>/dev/null
+  fi
 fi
 
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 echo "****  CONFIGURE SCRIPT START                                                               *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-#Выполняем конфигурацию программы
-#./configure --prefix=$AppPrefix/$AppName
-if [ "$Options" == "-d" ]; then  \
-  echo "disabled configure"
-else
-./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
-if [ "$ConfigureFile" == "autogen.sh" ]; then
-#After run autogen.sh if true: Now you are ready to run ./configure
-  AppConfigScenario="configure --prefix=$AppPrefix/$AppName"
-  ConfigureFile="configure"
-./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
-fi
-fi
-#FIX BUG:1 BEGIN
-#Проверяем наличие Makefile
-if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
-  cp -r $AppFullName/.Makefile.alsycpmake Makefile
-fi
-#FIX BUG:1 END
-
-#Проверяем наличие Makefile
-if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
-  echo "$(less ALSYBUILDPATH)"
-  ALSYBUILDPATH="$(less ALSYBUILDPATH)"
-  if [ "$ALSYBUILDPATH" == "" ]; then
-   echo "Error: Makefile "Makefile.in" does not exists!"
-   exit
+if [ "$Options" != "-n" ]; then
+  #Выполняем конфигурацию программы
+  #./configure --prefix=$AppPrefix/$AppName
+  if [ "$Options" == "-d" ]; then  \
+    echo "disabled configure"
   else
-   cd "$ALSYBUILDPATH"
-  fi 
+    ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
+    if [ "$ConfigureFile" == "autogen.sh" ]; then
+    #After run autogen.sh if true: Now you are ready to run ./configure
+      AppConfigScenario="configure --prefix=$AppPrefix/$AppName"
+      ConfigureFile="configure"
+      ./$AppConfigScenario >> $AppFullName/setup_all.log > $AppFullName/setup_config.log 2> $AppFullName/setup_config_err.log
+    fi
+  fi
+
+  #FIX BUG:1 BEGIN
+  #Проверяем наличие Makefile
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
+    cp -r $AppFullName/.Makefile.alsycpmake Makefile
+  fi
+  #FIX BUG:1 END
+
+  #Проверяем наличие Makefile
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
+    echo "$(less ALSYBUILDPATH)"
+    ALSYBUILDPATH="$(less ALSYBUILDPATH)"
+    if [ "$ALSYBUILDPATH" == "" ]; then
+      echo "Error: Makefile "Makefile.in" does not exists!"
+      exit
+    else
+      cd "$ALSYBUILDPATH"
+    fi 
+  fi
 fi
 
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
