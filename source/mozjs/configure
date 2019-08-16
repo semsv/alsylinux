@@ -1,0 +1,16 @@
+#/bin/sh
+ALSYBUILDPATH=/usr/src/alsy-source/mozjs/mozjs-60.1.0/mozjs-build
+
+    echo $ALSYBUILDPATH > "ALSYBUILDPATH" && 
+    tar -xf mozjs-60.1.0.tar.bz2 && 
+    cd mozjs-60.1.0 && 
+    mkdir mozjs-build && 
+    cd    mozjs-build && 
+    echo $ALSYBUILDPATH > "ALSYBUILDPATH" && 
+    ../js/src/configure --prefix=/usr/src/tools/mozjs-60.1.0 \
+                    --with-intl-api     \
+                    --with-system-zlib  \
+                    --with-system-nspr  \
+                    --with-system-icu   \
+                    --disable-jemalloc  \
+                    --enable-readline
