@@ -3,8 +3,8 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.6                                                                                      ###
-###   Дата последнего изменения: 12 августа 2019 10:05 понедельник                                       ###
+###   Версия: 1.0.7                                                                                      ###
+###   Дата последнего изменения: 16 августа 2019 16:26 пятница                                           ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -16,7 +16,7 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.6
+version=1.0.7
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -24,6 +24,7 @@ version=1.0.6
 # В версии 1.0.4 добавлен copyflag
 # В версии 1.0.5 добавлена новая возможность сборки из архивного файла
 # В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод инф о использовании программы и версии
+# В версии 1.0.7 добавлены две новые опции
 copyflag="1" 
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
@@ -107,7 +108,10 @@ version()
 
 help()
 {
- echo "setup - compile program from source and build alsy bundle"
+ echo ""
+ echo " ###################################################################################"
+ echo -e "\e[34m ### \e[0m  setup (version=$version) - compile program from source and build alsy bundle \e[34m###"
+ echo -e "\e[31m ###\e[0m#############################################################################\e[31m###\e[00m"
  echo ""
  usage
  echo ""
@@ -115,7 +119,9 @@ help()
  echo "  -h,	--help   	display help message and exit"
  echo "  -v,	--version	display version information and exit"
  echo "  -x,	--xconfig	setup with non-standard configure from config.sh file"
- echo "  -n,	--not-configure	execute "setup" command without configure file"
+ echo "  -n,	--not-configure	execute \"setup\" command without configure file"
+ echo "  -i,	--only-install	execute \"setup\" command without configure file and make, only make install"
+ echo ""
 }
 
 if [ "$AppFullName" == "" ]; then
@@ -249,11 +255,15 @@ if [ "$Options" == "--not-configure" ]; then
   Options="-n"
 fi
 
+if [ "$Options" == "--only-install" ]; then
+  Options="-i"
+fi
+
 if [ "$Options" == "--xconfig" ]; then
   Options="-x"
 fi
 
-if [ "$Options" == "-x" ]; then  
+if [ "$Options" == "-x" ]; then
   AppConfigScenario="config.sh"
   ConfigureFile="$AppConfigScenario"
   echo $AppConfigScenario
@@ -275,7 +285,7 @@ if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
  exit
 fi
 
-if [ "$Options" != "-n" ]; then
+if [ "$Options" != "-n" && "$Options" != "-i" ]; then
   #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
   if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
     make clean >>$AppFullName/setup_all.log 2>/dev/null
@@ -300,7 +310,7 @@ echo "**************************************************************************
 echo "****  CONFIGURE SCRIPT START                                                               *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-if [ "$Options" != "-n" ]; then
+if [ "$Options" != "-n" && "$Options" != "-i" ]; then
   #Выполняем конфигурацию программы
   #./configure --prefix=$AppPrefix/$AppName
   if [ "$Options" == "-d" ]; then  \
@@ -339,17 +349,21 @@ echo "**************************************************************************
 echo "****  MAKEFILE SCRIPT START                                                                *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-#Команда компилятору выполнить сборку
-make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
 
-#Также проверим логи, иногда в процессе установки возникают ошибки
-if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
-  if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
-    echo "Error ignored!"
-  else
-    echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
-    exit
-  fi  
+if [ "$Options" != "-i" ]; then
+# Команда компилятору выполнить сборку
+
+  make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
+
+# Также проверим логи, иногда в процессе установки возникают ошибки
+  if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
+    if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
+      echo "Error ignored!"
+    else
+      echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
+      exit
+    fi  
+  fi
 fi
 
 #Перед установкой очищаем от предыдущих установок
