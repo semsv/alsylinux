@@ -285,7 +285,7 @@ if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
  exit
 fi
 
-if [ "$Options" != "-n" && "$Options" != "-i" ]; then
+if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
   #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
   if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
     make clean >>$AppFullName/setup_all.log 2>/dev/null
@@ -310,7 +310,7 @@ echo "**************************************************************************
 echo "****  CONFIGURE SCRIPT START                                                               *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-if [ "$Options" != "-n" && "$Options" != "-i" ]; then
+if [[ "$Options" != "-n" && "$Options" != "-i" ]]; then
   #Выполняем конфигурацию программы
   #./configure --prefix=$AppPrefix/$AppName
   if [ "$Options" == "-d" ]; then  \
