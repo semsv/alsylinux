@@ -1,3 +1,6 @@
+ALSYBUILDPATH="/usr/src/alsy-source/NetworkManager-1.18.2/build"
+echo $ALSYBUILDPATH > "ALSYBUILDPATH"
+
 if [ -d build ]; then
   rm -rd build
 fi
