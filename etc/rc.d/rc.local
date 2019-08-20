@@ -97,5 +97,7 @@ ln -s /usr/sbin/* /usr/bin/ 2>/dev/null
 
 # Настройка выключения компьютера
 echo "poweroff -i -f" > /etc/cron.daily/poweroff
+# Настройка файервола
+iptables -I INPUT -p icmp -j REJECT
 
 chmod 0 /etc/rc.d/rc.local
