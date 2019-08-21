@@ -5,7 +5,19 @@ declare -i exit_code
 declare -i counter=0
 declare -i menu_item_count=4
 declare selected_device
+declare selected_disk
 declare sel_dev_index=1
+
+get_input_charcode()
+{
+  if [ "$1" -eq 0 ]; then
+    read -r -s -n 1 lv_char
+    LC_ALL=C printf -v lv_int '%d' "'$lv_char"
+  else
+    read -r -s -n 1 -t 0.01 lv_char
+    LC_ALL=C printf -v lv_int '%d' "'$lv_char"
+  fi
+}
 
 init_device()
 {
@@ -24,8 +36,8 @@ for ((number=1;number<=$lvcntdev;number++))
 do
   if [ "$number" -eq "$counter" ]; then
     echo -e "\e[41m$number. $(lsscsi | head -n $number | tail -n1)\e[00m"
-    selected_device="$(lsscsi | head -n $number | tail -n1 | tr " " "\n" | grep "/dev")"
-    selected_device=" - $(fdisk -l "$selected_device" | grep "Disk /dev" | cut -d "," -f1)"
+    selected_disk="$(lsscsi | head -n $number | tail -n1 | tr " " "\n" | grep "/dev")"
+    selected_device=" - $(fdisk -l "$selected_disk" | grep "Disk /dev" | cut -d "," -f1)"
     sel_dev_index="$number"
   else
     echo -e "\e[44m$number. $(lsscsi | head -n $number | tail -n1)\e[00m"
@@ -38,25 +50,58 @@ print_menu()
  echo -e "\e[44m"
  clear
  echo -e "\e[00m"
- if [ "$counter" -eq 1 ]; then
-   echo -e "\e[41m1. Выбрать диск $selected_device\e[00m"
+ if [ "$menu_item_count" -eq 4 ]; then
+   if [ "$counter" -eq 1 ]; then
+     echo -e "\e[41m1. Выбрать диск $selected_device\e[00m"
+   else
+     echo -e "\e[44m1. Выбрать диск $selected_device\e[00m"
+   fi
+   if [ "$counter" -eq 2 ]; then
+     echo -e "\e[41m2. Форматировать диск\e[00m"
+   else
+     echo -e "\e[44m2. Форматировать диск\e[00m"
+   fi
+   if [ "$counter" -eq 3 ]; then
+     echo -e "\e[41m3. Установка\e[00m"
+   else
+     echo -e "\e[44m3. Установка\e[00m"
+   fi
+   if [ "$counter" -eq 4 ]; then
+     echo -e "\e[41m4. Выход (Клавиша ESC)\e[00m"
+   else
+     echo -e "\e[44m4. Выход (Клавиша ESC)\e[00m"
+   fi
  else
-   echo -e "\e[44m1. Выбрать диск $selected_device\e[00m"
- fi
- if [ "$counter" -eq 2 ]; then
-   echo -e "\e[41m2. Форматировать диск\e[00m"
- else
-   echo -e "\e[44m2. Форматировать диск\e[00m"
- fi
- if [ "$counter" -eq 3 ]; then
-   echo -e "\e[41m3. Установка\e[00m"
- else
-   echo -e "\e[44m3. Установка\e[00m"
- fi
- if [ "$counter" -eq 4 ]; then
-   echo -e "\e[41m4. Выход (Клавиша ESC)\e[00m"
- else
-   echo -e "\e[44m4. Выход (Клавиша ESC)\e[00m"
+   if [ "$counter" -eq 1 ]; then
+     echo -e "\e[41m1. Выбрать диск $selected_device\e[00m"
+   else
+     echo -e "\e[44m1. Выбрать диск $selected_device\e[00m"
+   fi
+   if [ "$counter" -eq 2 ]; then
+     echo -e "\e[41m2. Выбрать раздел диска $selected_disk\e[00m"
+   else
+     echo -e "\e[44m2. Выбрать раздел диска $selected_disk\e[00m"
+   fi
+   if [ "$counter" -eq 3 ]; then
+     echo -e "\e[41m3. Переразбить диск $selected_disk\e[00m"
+   else
+     echo -e "\e[44m3. Переразбить диск $selected_disk\e[00m"
+   fi
+   if [ "$counter" -eq 4 ]; then
+     echo -e "\e[41m4. Форматировать диск\\раздел \e[00m"
+   else
+     echo -e "\e[44m4. Форматировать диск\\раздел \e[00m"
+   fi
+   if [ "$counter" -eq 5 ]; then
+     echo -e "\e[41m5. Установка\e[00m"
+   else
+     echo -e "\e[44m5. Установка\e[00m"
+   fi
+   if [ "$counter" -eq 6 ]; then
+     echo -e "\e[41m6. Выход (Клавиша ESC)\e[00m"
+   else
+     echo -e "\e[44m6. Выход (Клавиша ESC)\e[00m"
+   fi
  fi
 }
 
@@ -78,28 +123,21 @@ else
   init_device
 fi
 # Считываем один символ с клавиатуры
-read -r -s -n 1 lv_char
-LC_ALL=C printf -v lv_int '%d' "'$lv_char"
-
+get_input_charcode "0"
 if [ "$lv_int" -eq 0 ]; then
  exit_code="$counter"
  continue
 fi
 # Если это не печатный символ ESC, UP ARROW, DOWN ARROW,..., etc
 if [ "$lv_int" -eq 27 ]; then 
-# echo "$lv_int"
- read -r -s -n 1 -t 0.01 lv_char
- LC_ALL=C printf -v lv_int '%d' "'$lv_char"
+ get_input_charcode "1"
  if [ "$lv_int" -ne 91 ]; then
   # Этот символ ESCAPE
   exit_code=999
   continue
  fi
 # В противном случае этот символ одна из стрелок вверх или вниз или вправо или влево
-# echo "$lv_int" 
- read -r -s -n 1 -t 1 lv_char
- LC_ALL=C printf -v lv_int '%d' "'$lv_char"
- 
+ get_input_charcode "1"
  if [[ "$lv_int" -eq 65 && "$counter" -gt 1 ]]; then
   let counter=counter-1
  else
@@ -117,7 +155,6 @@ if [ "$lv_int" -eq 27 ]; then
 # echo -n -e "$counter\b"
 # echo "$lv_int"
 fi
-
 done
 }
 
@@ -127,7 +164,11 @@ declare -i main_exit_code=0
 while [ "$main_exit_code" -eq 0 ]
 do
   curr_scenario=1
-  menu_item_count=4
+  if [ "$selected_disk" != "" ]; then
+    menu_item_count=6
+  else
+    menu_item_count=4
+  fi
   navigate
   
   if [ "$exit_code" -eq 999 ]; then
@@ -145,10 +186,33 @@ do
     clear
     echo "counter=$counter"
   else
-    if [ "$counter" -eq 2 ]; then
-      echo "select 2."
+    if [[ "$counter" -eq 2 && "$selected_disk" == "" ]]; then  
+      curr_scenario=2
+      navigate
+      continue
     fi
-    if [ "$counter" -eq 4 ]; then
+    # Выбран пункт 3. меню - "Установка"
+    if [[ "$counter" -eq 3 && "$selected_disk" == "" ]]; then
+      curr_scenario=2
+      navigate
+      continue
+    fi
+    # Выбран пункт 3. меню - "Переразбить диск"
+    if [[ "$counter" -eq 3 && "$selected_disk" != "" ]]; then
+      echo -e "\e[00m"
+      clear
+      echo "select 3 item menu"
+      fdisk $selected_disk
+    fi
+    # Выбран пункт 4. меню - "Выход"
+    if [[ "$counter" -eq 4 && "$selected_disk" == "" ]]; then
+      main_exit_code="$counter"
+      clear
+      echo "counter=$counter"
+      continue
+    fi
+    # Выбран пункт 6. меню - "Выход"
+    if [[ "$counter" -eq 6 && "$selected_disk" != "" ]]; then
       main_exit_code="$counter"
       clear
       echo "counter=$counter"
