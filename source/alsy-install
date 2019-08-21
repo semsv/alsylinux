@@ -4,9 +4,17 @@ declare -i lv_int
 declare -i exit_code
 declare -i counter=0
 declare -i menu_item_count=4
-declare selected_device
-declare selected_disk
+declare selected_device      # Выбранный диск в формате для отображения
+declare selected_disk        # Выбранный диск, например "/dev/sda"
+declare selected_device_part # Выбранный раздел диска в формате для отображения
+declare selected_part        # Выбранный раздел диска, например "/dev/sda1"
 declare sel_dev_index=1
+
+clear_sel_part()
+{
+  selected_device_part=""
+  selected_part=""
+}
 
 get_input_charcode()
 {
@@ -45,6 +53,33 @@ do
 done
 }
 
+init_partition()
+{
+declare -i lvcntdev
+
+echo -e "\e[44m"
+clear
+echo -e "\e[00m"
+
+lvcntdev="$(fdisk -l $selected_disk | grep -E '^/dev/' | wc -l)"
+menu_item_count="$lvcntdev"
+
+# echo "$lvcntdev"
+
+for ((number=1;number<=$lvcntdev;number++))
+do
+  if [ "$number" -eq "$counter" ]; then
+    echo -e "\e[41m$number. $(fdisk -l $selected_disk | grep -E '^/dev/' | head -n $number | tail -n1)\e[00m"
+    selected_device_part="$(fdisk -l $selected_disk | grep -E '^/dev/' | head -n $number | tail -n1)"
+    selected_part="$(echo $selected_device_part | cut -d " " -f1)"
+  else
+    echo -e "\e[44m$number. $(fdisk -l $selected_disk | grep -E '^/dev/' | head -n $number | tail -n1)\e[00m"
+  fi
+  
+done
+}
+
+
 print_menu()
 {
  echo -e "\e[44m"
@@ -74,23 +109,24 @@ print_menu()
  else
    if [ "$counter" -eq 1 ]; then
      echo -e "\e[41m1. Выбрать диск $selected_device\e[00m"
+     
    else
      echo -e "\e[44m1. Выбрать диск $selected_device\e[00m"
    fi
    if [ "$counter" -eq 2 ]; then
-     echo -e "\e[41m2. Выбрать раздел диска $selected_disk\e[00m"
+     echo -e "\e[41m2. Выбрать раздел диска [ $selected_disk [ $selected_device_part ]] \e[00m"
    else
-     echo -e "\e[44m2. Выбрать раздел диска $selected_disk\e[00m"
+     echo -e "\e[44m2. Выбрать раздел диска [ $selected_disk [ $selected_device_part ]] \e[00m"
    fi
    if [ "$counter" -eq 3 ]; then
-     echo -e "\e[41m3. Переразбить диск $selected_disk\e[00m"
+     echo -e "\e[41m3. Переразбить диск [ $selected_disk ] \e[00m"
    else
-     echo -e "\e[44m3. Переразбить диск $selected_disk\e[00m"
+     echo -e "\e[44m3. Переразбить диск [ $selected_disk ] \e[00m"
    fi
    if [ "$counter" -eq 4 ]; then
-     echo -e "\e[41m4. Форматировать диск\\раздел \e[00m"
+     echo -e "\e[41m4. Форматировать диск [ $selected_disk [ $selected_device_part ]] \e[00m"
    else
-     echo -e "\e[44m4. Форматировать диск\\раздел \e[00m"
+     echo -e "\e[44m4. Форматировать диск [ $selected_disk [ $selected_device_part ]] \e[00m"
    fi
    if [ "$counter" -eq 5 ]; then
      echo -e "\e[41m5. Установка\e[00m"
@@ -103,6 +139,35 @@ print_menu()
      echo -e "\e[44m6. Выход (Клавиша ESC)\e[00m"
    fi
  fi
+}
+
+format_disk()
+{
+  menu_item_count=4
+  echo -e "\e[44m"
+  clear
+  echo -e "\e[00m"
+  
+  if [ "$counter" -eq 1 ]; then
+    echo -e "\e[41m1. Форматировать в FAT32 \e[00m"
+  else
+    echo -e "\e[44m1. Форматировать в FAT32 \e[00m"
+  fi
+  if [ "$counter" -eq 2 ]; then
+    echo -e "\e[41m2. Форматировать в EXT2 \e[00m"
+  else
+    echo -e "\e[44m2. Форматировать в EXT2 \e[00m"
+  fi
+  if [ "$counter" -eq 3 ]; then
+    echo -e "\e[41m3. Форматировать в EXT3 \e[00m"
+  else
+    echo -e "\e[44m3. Форматировать в EXT3 \e[00m"
+  fi
+  if [ "$counter" -eq 4 ]; then
+    echo -e "\e[41m4. Форматировать в EXT4 \e[00m"
+  else
+    echo -e "\e[44m4. Форматировать в EXT4 \e[00m"
+  fi
 }
 
 navigate()
@@ -120,7 +185,15 @@ do
 if [ "$curr_scenario" -eq 1 ]; then
   print_menu
 else
-  init_device
+  if [ "$curr_scenario" -eq 3 ]; then
+    init_partition
+  else
+    if [ "$curr_scenario" -eq 4 ]; then
+      format_disk
+    else
+      init_device
+    fi
+  fi
 fi
 # Считываем один символ с клавиатуры
 get_input_charcode "0"
@@ -170,24 +243,26 @@ do
     menu_item_count=4
   fi
   navigate
-  
   if [ "$exit_code" -eq 999 ]; then
       main_exit_code="$counter"
-      clear
-      echo "counter=$counter"
       continue
   fi
-  
+  # Выбрать пункт 1. меню - "Выбрать диск"
   if [ "$counter" -eq 1 ]; then
+    clear_sel_part
     curr_scenario=2
     navigate
-#   lsscsi | head -n 2 | tail -n1
-#   echo "lsscsi count rows=$(lsscsi | wc -l)"
-    clear
-    echo "counter=$counter"
+    continue
   else
+    # Выбрать пункт 2. меню - "Форматировать"
     if [[ "$counter" -eq 2 && "$selected_disk" == "" ]]; then  
       curr_scenario=2
+      navigate
+      continue
+    fi
+    # Выбран пункт 2. меню - "Выбрать раздел диска"
+    if [[ "$counter" -eq 2 && "$selected_disk" != "" ]]; then
+      curr_scenario=3
       navigate
       continue
     fi
@@ -203,12 +278,20 @@ do
       clear
       echo "select 3 item menu"
       fdisk $selected_disk
+      clear_sel_part
+      continue
     fi
     # Выбран пункт 4. меню - "Выход"
     if [[ "$counter" -eq 4 && "$selected_disk" == "" ]]; then
       main_exit_code="$counter"
       clear
       echo "counter=$counter"
+      continue
+    fi
+    # Выбран пункт 4. меню - "Форматировать диск"
+    if [[ "$counter" -eq 4 && "$selected_disk" != "" ]]; then
+      curr_scenario=4
+      navigate
       continue
     fi
     # Выбран пункт 6. меню - "Выход"
@@ -220,3 +303,6 @@ do
     fi
   fi
 done
+# Очистка экрана
+echo -e "\e[00m"
+clear
