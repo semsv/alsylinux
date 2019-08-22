@@ -211,13 +211,12 @@ format_disk()
   fi
 }
 
-confirm_format_disk()
+dialog_yes_no_menu()
 {
   menu_item_count=2
   echo -e "\e[44m"
   clear
-  echo -e "\e[00m"
-  echo -e "\e[44mВы действительно хотите отформатировать диск? [ $selected_disk [ $selected_part $selected_part_size ]] \e[00m"
+  echo -e "\e[44m $1 \e[00m"
   echo -e "\e[00m"
   if [ "$counter" -eq 1 ]; then
     echo -e "\e[41m1. Да\e[00m"
@@ -229,6 +228,11 @@ confirm_format_disk()
   else
     echo -e "\e[44m2. Нет\e[00m"
   fi
+}
+
+confirm_format_disk()
+{
+  dialog_yes_no_menu "Вы действительно хотите отформатировать диск? [ $selected_disk [ $selected_part $selected_part_size ]]"
 }
 
 exec_format_disk()
@@ -265,10 +269,59 @@ exec_format_disk()
   read -n 1 -t 60 lvchar
 }
 
+scenario_format_disk()
+{
+# Если не выбран диск то сначала показываем меню выбора диска
+  if [ "$selected_disk" == "" ]; then
+    curr_scenario=2
+    navigate
+  fi
+# Если не выбран раздел диска, то предлагаем его выбрать
+  if [ "$selected_part" == "" ]; then
+    curr_scenario=3
+    navigate
+  fi
+# Далее выводим основное меню сценария "Форматировать диск"
+  curr_scenario=4
+  navigate
+  
+  # После выбора пункта меню анализируем что выбрано и в зависимости от этого выводим следющ меню
+  if [ "$counter" -eq 1 ]; then
+    curr_scenario=41
+    lvfs="vfat"
+    navigate
+  elif [ "$counter" -eq 2 ]; then
+    curr_scenario=42
+    lvfs="ext2"
+    navigate
+  elif [ "$counter" -eq 3 ]; then
+    curr_scenario=43
+    lvfs="ext3"
+    navigate
+  elif [ "$counter" -eq 4 ]; then
+    curr_scenario=44
+    lvfs="ext4"
+    navigate
+  elif [ "$counter" -eq 5 ]; then
+    curr_scenario=45
+    lvfs="xfs"
+    navigate
+  elif [ "$counter" -eq 6 ]; then
+    curr_scenario=46
+    lvfs="reiserfs"
+    navigate
+  fi 
+  # После выбора пункта меню анализируем что выбрано и в зависимости от этого выполняем или нет форматирование диска
+  if [ "$counter" -eq 1 ]; then
+    exec_format_disk
+    sleep 1
+  fi
+}
+
 navigate()
 {
 exit_code=0
-exit_flg=1
+#exit_flg=1
 counter=1
 
 if [ "$curr_scenario" -eq 2 ]; then
@@ -276,21 +329,22 @@ if [ "$curr_scenario" -eq 2 ]; then
 fi
 
 # Если выбран пункт "Форматировать" но не выбран раздел диска
-if [[ "$curr_scenario" -eq 4 && $selected_part == "" ]]; then
-  curr_scenario=3
-  next_scenario=4
-  exit_flg=0
-fi
+#if [[ "$curr_scenario" -eq 4 && $selected_part == "" ]]; then
+#  curr_scenario=3
+#  next_scenario=4
+#  exit_flg=0
+#fi
 
-while [[ "$exit_code" -eq 0 || "$exit_flg" -eq 0 ]]
+#while [[ "$exit_code" -eq 0 || "$exit_flg" -eq 0 ]]
+while [ "$exit_code" -eq 0 ]
 do
 
-if [[ "$exit_code" -ne 0 && "$exit_flg" -eq 0 ]]; then
-  exit_flg=1
-  exit_code=0
-  curr_scenario="$next_scenario"
-  counter=1
-fi
+#if [[ "$exit_code" -ne 0 && "$exit_flg" -eq 0 ]]; then
+#  exit_flg=1
+#  exit_code=0
+#  curr_scenario="$next_scenario"
+#  counter=1
+#fi
 
 # Выводим меню
 if [ "$curr_scenario" -eq 1 ]; then
@@ -364,9 +418,8 @@ do
     continue
   else
     # Выбрать пункт 2. меню - "Форматировать"
-    if [[ "$counter" -eq 2 && "$selected_disk" == "" ]]; then  
-      curr_scenario=2
-      navigate
+    if [[ "$counter" -eq 2 && "$selected_disk" == "" ]]; then
+      scenario_format_disk
       continue
     fi
     # Выбран пункт 2. меню - "Выбрать раздел диска"
@@ -399,39 +452,7 @@ do
     fi
     # Выбран пункт 4. меню - "Форматировать диск"
     if [[ "$counter" -eq 4 && "$selected_disk" != "" ]]; then
-      curr_scenario=4
-      navigate
-      # После выбора пункта меню анализируем что выбрано и в зависимости от этого выводим следющ меню
-      if [ "$counter" -eq 1 ]; then
-        curr_scenario=41
-        lvfs="vfat"
-        navigate
-      elif [ "$counter" -eq 2 ]; then
-        curr_scenario=42
-        lvfs="ext2"
-        navigate
-      elif [ "$counter" -eq 3 ]; then
-        curr_scenario=43
-        lvfs="ext3"
-        navigate
-      elif [ "$counter" -eq 4 ]; then
-        curr_scenario=44
-        lvfs="ext4"
-        navigate
-      elif [ "$counter" -eq 5 ]; then
-        curr_scenario=45
-        lvfs="xfs"
-        navigate
-      elif [ "$counter" -eq 6 ]; then
-        curr_scenario=46
-        lvfs="reiserfs"
-        navigate
-      fi 
-      # После выбора пункта меню анализируем что выбрано и в зависимости от этого выполняем или нет форматирование диска
-      if [ "$counter" -eq 1 ]; then
-        exec_format_disk
-        sleep 1
-      fi
+      scenario_format_disk
       continue
     fi
     # Выбран пункт 6. меню - "Выход"
