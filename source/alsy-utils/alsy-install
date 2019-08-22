@@ -12,8 +12,12 @@ declare selected_part        # Выбранный раздел диска, на�
 declare lvfs=vfat            # Файловая система в которую форматируем диск
 declare sel_dev_index=1
 
+declare -i lvcntdev=0
+declare device_array[100]
+
 clear_sel_part()
 {
+  lvcntdev=0
   selected_device_part=""
   selected_part=""
   selected_part_size=""
@@ -52,15 +56,24 @@ get_input_charcode()
   fi
 }
 
+init_scsi_dev()
+{
+  if [ "$lvcntdev" -eq 0 ]; then
+    lvcntdev="$(lsscsi | wc -l)"
+    for ((number=1;number<=$lvcntdev;number++))
+    do
+      device_array[$number]="$(lsscsi | head -n $number | tail -n1)"
+    done
+  fi
+}
+
 init_device()
 {
-declare -i lvcntdev
-
 echo -e "\e[44m"
 clear
 echo -e "\e[00m"
 
-lvcntdev="$(lsscsi | wc -l)"
+init_scsi_dev
 menu_item_count="$lvcntdev"
 
 # echo "$lvcntdev"
@@ -68,12 +81,10 @@ menu_item_count="$lvcntdev"
 for ((number=1;number<=$lvcntdev;number++))
 do
   if [ "$number" -eq "$counter" ]; then
-    echo -e "\e[41m$number. $(lsscsi | head -n $number | tail -n1)\e[00m"
-    selected_disk="$(lsscsi | head -n $number | tail -n1 | tr " " "\n" | grep "/dev")"
-    selected_device=" - $(fdisk -l "$selected_disk" | grep "Disk /dev" | cut -d "," -f1)"
+    echo -e "\e[41m$number. ${device_array[$number]}\e[00m"
     sel_dev_index="$number"
   else
-    echo -e "\e[44m$number. $(lsscsi | head -n $number | tail -n1)\e[00m"
+    echo -e "\e[44m$number. ${device_array[$number]}\e[00m"
   fi
 done
 }
@@ -273,8 +284,7 @@ scenario_format_disk()
 {
 # Если не выбран диск то сначала показываем меню выбора диска
   if [ "$selected_disk" == "" ]; then
-    curr_scenario=2
-    navigate
+    scenario_select_disk
   fi
 # Если не выбран раздел диска, то предлагаем его выбрать
   if [ "$selected_part" == "" ]; then
@@ -318,46 +328,49 @@ scenario_format_disk()
   fi
 }
 
+scenario_select_disk()
+{
+  clear_sel_part
+  curr_scenario=2
+  navigate
+  selected_disk="$(echo ${device_array[$counter]} | tr " " "\n" | grep "/dev")"
+  selected_device=" - $(fdisk -l "$selected_disk" | grep "Disk /dev" | cut -d "," -f1)"
+}
+
+on_before_navigate()
+{
+  if [ "$curr_scenario" -eq 2 ]; then
+    counter="$sel_dev_index"
+  fi
+}
+
+on_screen_menu()
+{
+# Выводим меню
+  if [ "$curr_scenario" -eq 1 ]; then
+    print_menu
+  elif [ "$curr_scenario" -eq 3 ]; then
+    init_partition
+  elif [ "$curr_scenario" -eq 4 ]; then
+    format_disk
+  elif [[ "$curr_scenario" -ge 41 && "$curr_scenario" -le 46 ]]; then
+    confirm_format_disk
+  else
+    init_device
+  fi
+}
+
 navigate()
 {
 exit_code=0
-#exit_flg=1
 counter=1
-
-if [ "$curr_scenario" -eq 2 ]; then
-  counter="$sel_dev_index"
-fi
-
-# Если выбран пункт "Форматировать" но не выбран раздел диска
-#if [[ "$curr_scenario" -eq 4 && $selected_part == "" ]]; then
-#  curr_scenario=3
-#  next_scenario=4
-#  exit_flg=0
-#fi
-
-#while [[ "$exit_code" -eq 0 || "$exit_flg" -eq 0 ]]
+# Перед выбором выполнем событие в котором возможно будет переопределен параметр "counter"
+on_before_navigate
+# Начало цикла по выбору пункта меню
 while [ "$exit_code" -eq 0 ]
 do
-
-#if [[ "$exit_code" -ne 0 && "$exit_flg" -eq 0 ]]; then
-#  exit_flg=1
-#  exit_code=0
-#  curr_scenario="$next_scenario"
-#  counter=1
-#fi
-
-# Выводим меню
-if [ "$curr_scenario" -eq 1 ]; then
-  print_menu
-elif [ "$curr_scenario" -eq 3 ]; then
-  init_partition
-elif [ "$curr_scenario" -eq 4 ]; then
-  format_disk
-elif [[ "$curr_scenario" -ge 41 && "$curr_scenario" -le 46 ]]; then
-  confirm_format_disk
-else
-  init_device
-fi
+# Выбираем какое меню показать в зависимости от сценария
+on_screen_menu
 # Считываем один символ с клавиатуры
 get_input_charcode "0"
 if [ "$lv_int" -eq 0 ]; then
@@ -370,6 +383,7 @@ if [ "$lv_int" -eq 27 ]; then
  if [ "$lv_int" -ne 91 ]; then
   # Этот символ ESCAPE
   exit_code=999
+  counter="$menu_item_count"
   continue
  fi
 # В противном случае этот символ одна из стрелок вверх или вниз или вправо или влево
@@ -388,8 +402,6 @@ if [ "$lv_int" -eq 27 ]; then
     counter=1
   fi
  fi
-# echo -n -e "$counter\b"
-# echo "$lv_int"
 fi
 done
 }
@@ -412,9 +424,7 @@ do
   fi
   # Выбрать пункт 1. меню - "Выбрать диск"
   if [ "$counter" -eq 1 ]; then
-    clear_sel_part
-    curr_scenario=2
-    navigate
+    scenario_select_disk
     continue
   else
     # Выбрать пункт 2. меню - "Форматировать"
