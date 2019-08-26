@@ -257,8 +257,8 @@ exec_format_disk()
   check_mount="$(mount -l | grep "$selected_part")"
   if [ "$check_mount" != "" ]; then
     umount "$selected_part"
+    sleep 3
   fi
-  sleep 3
 # Форматируем выбранный раздел
   if [ "$lvfs" == 'reiserfs' ]; then
     mkfs -t $lvfs -f -l "ALSY-REISERFS" "$selected_part"
