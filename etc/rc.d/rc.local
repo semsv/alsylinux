@@ -7,37 +7,25 @@
 # make an /etc/rc.d/rc.local_shutdown script and put those
 # commands in there.
 
-#Убедимся, что у нас файл последней версии если нет то скачиваем
-#Проверяем наличие файла git.ignore
+# Настройка doc book xml
+. /etc/rc.d/rc.docbook
+docbook_start
 
-if [ ! -f "/etc/rc.d/git.ignore" ]; then
- lv_git_syn="$(git.synchron /etc/rc.d/rc.local)"
- if [ "$lv_git_syn" != "0" ]; then
-   if [ "$lv_git_syn" != "1" ]; then
-     echo "exit $lv_git_syn"
-     exit 2
-   fi
-   # Надо: 1. сохранить старый файл под именем git.ignore 2. скачать свежий файл, 3. запустить его на выполнение и 4. выйти из этого скрипта
-   mv /etc/rc.d/rc.local /etc/rc.d/git.ignore
-   wget -O /etc/rc.d/rc.local "https://github.com/semsv/alsylinux/raw/master/etc/rc.d/rc.local"
-   echo "granted success"
-   exit 1
- else
-   echo "exit 0"
-   exit 0
- fi
-fi
+# Настройка демона печати
+. /etc/rc.d/rc.cups
+cups_start
 
-echo "git ignore"
-exit
+# Настройка файервола
+. /etc/rc.d/rc.firewall
+firewall_start
 
-#Проверим сначала что папка есть
-if [ "$(ls -1 /mnt/live/memory/bundles | grep "docbook" 2>/dev/null)" != "" ]; then
-  cd /usr/src/alsy-source/docbook-xml
-  ./config.sh > 1_script.log 2> 1err_script.log
-  cd /usr/src/alsy-source/docbook-xsl
-  ./config.sh > 2_script.log 2> 2err_script.log
-fi
+# Настройка SUDO
+. /etc/rc.d/rc.sudo
+sudo_start
+
+# Настройка SSHD
+. /etc/rc.d/rc.sshd
+sshd_start
 
 #Проверим сначала что папка есть
 if [ "$(ls -1 /mnt/live/memory/bundles | grep "glibc-2.29" 2>/dev/null)" != "" ]; then
@@ -50,15 +38,12 @@ else
  fi
 fi
 
-if [ -x /etc/init.d/cups ]; then
-  /etc/init.d/cups start
-fi
-
 if [ "$(ls -1 /mnt/live/memory/bundles | grep "glib-2.61.1" 2>/dev/null)" != "" ]; then
   echo -e "GLIB-2.61.1 ........................................\e[32m[OK]\e[0m"
   mv /usr/src/tools/glib-2.61.1 /usr/src/tools/glib-2.61.x
   ln -s /usr/src/tools/glib-2.61.x /usr/src/tools/glib-2.61.1
 fi
+
 # Для каталога /root подкл вирт диск
 if [ "$(ls -l /mnt/live/memory/data | grep "root.vhd" 2>/dev/null)" != "" ]; then
   mount -t ext3 /mnt/live/memory/data/root.vhd /root
@@ -68,22 +53,19 @@ if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; the
   mkswap /mnt/live/memory/data/tmp.swap
   swapon /mnt/live/memory/data/tmp.swap -p 32767
 fi
+
 # Меняем настройки ядра для ограничения по доступной оперативной памяти (чтобы исключить полного зависания при исчерпании физ памяти)
 sysctl -w vm.overcommit_memory="1"
-sysctl -w vm.overcommit_kbytes="4096000"
-sysctl -w vm.overcommit_ratio="330"
-sysctl -w vm.overcommit_memory="2"
+sysctl -w vm.overcommit_kbytes="4096000" # ~ 4 GiB
+#sysctl -w vm.overcommit_ratio="330"
+#sysctl -w vm.overcommit_memory="2"
 sysctl -w vm.user_reserve_kbytes="102400" # 100 MB
+sysctl -w vm.swappiness="25"
 #echo 'sysctl -w vm.overcommit_memory="2"' >> /etc/cron.hourly/sysctl
 #echo 'mv /etc/cron.hourly/sysctl /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
 #echo 'chmod 0 /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
 #chmod a+rwx /etc/cron.hourly/sysctl
 #crontab /etc/rc.d/crontab.sysctl
-
-# Настройка SUDO
-chown root:root /usr/local/bin/sudo
-chmod u+s /usr/local/bin/sudo
-chmod 4755 /bin/su
 
 # Настройка chromium
 chmod 4755 /usr/lib64/chromium/chrome-sandbox
@@ -94,16 +76,12 @@ chmod 755 /usr/bin/nmcli
 # Настройка команд для пользователей не root
 ln -s /sbin/* /usr/bin/ 2>/dev/null
 ln -s /usr/sbin/* /usr/bin/ 2>/dev/null
+ln -s /bin/* /usr/bin 2>/dev/null
 
 # Настройка выключения компьютера
 echo "poweroff -i -f" > /etc/cron.daily/poweroff
-# Настройка файервола
-iptables -I INPUT -p icmp -j REJECT
-# отключаем TelNet
-iptables -I INPUT -p tcp --dport=23 -j REJECT
-iptables -I INPUT -p tcp --dport=443 -j REJECT
-iptables -I INPUT -p igmp -j REJECT
-# отключаем NetBIOS
-iptables -I INPUT -p tcp --dport=137:139 -j REJECT
+
+# Монтируем устройства
+/etc/rc.d/mount_device
 
 chmod 0 /etc/rc.d/rc.local
