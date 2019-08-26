@@ -1,0 +1,17 @@
+#!/bin/bash
+
+console_start()
+{
+  if [ "$(ls -l /mnt/live/memory/bundles/ | grep ConsoleKit-0.4.6)" != "" ]; then
+    if [ -d /var/run/ConsoleKit ]; then
+      rm -rd /var/run/ConsoleKit
+    fi
+  fi
+  ln -s /usr/src/tools/ConsoleKit-0.4.6/var/run/ConsoleKit /var/run/ConsoleKit
+}
+
+if [ "$1" == "start" ]; then
+  console_start
+else
+  echo "usage: $0 start"
+fi

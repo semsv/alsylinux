@@ -1,0 +1,43 @@
+#!/bin/bash
+polkit_start()
+{
+if [ "$(less /etc/group | grep polkitd)" == "" ]; then
+  if [ -d /usr/src/tools/polkit-0.116 ]; then
+    echo -n "Alsy setup polkit..."
+# Настройка polkit
+    chmod -v 4755 /usr/src/tools/polkit-0.116/lib/polkit-1/polkit-agent-helper-1 >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /lib/polkit-1/polkit-agent-helper-1 >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /lib64/polkit-1/polkit-agent-helper-1 >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /usr/lib/polkit-1/polkit-agent-helper-1 >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /usr/lib64/polkit-1/polkit-agent-helper-1 >> /var/log/alsy-messagebus.log
+    
+    sleep 1
+    echo -n "..."
+
+    if [ -f /sbin/pkexec ]; then
+      chmod -v 4755 /sbin/pkexec >> /var/log/alsy-messagebus.log
+    fi
+
+    chmod -v 4755 /bin/pkexec >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /usr/bin/pkexec >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /usr/local/bin/pkexec >> /var/log/alsy-messagebus.log
+    chmod -v 4755 /usr/src/tools/polkit-0.116/bin/pkexec >> /var/log/alsy-messagebus.log
+
+    chmod -v 700 /etc/polkit-1/rules.d >> /var/log/alsy-messagebus.log
+    chmod -v 700 /usr/src/tools/polkit-0.116/etc/polkit-1/rules.d >> /var/log/alsy-messagebus.log
+    
+    sleep 1
+    echo -n "..."
+
+    group_id="28"
+    groupadd -fg $group_id polkitd &&
+    useradd -c "PolicyKit Daemon Owner" -d /etc/polkit-1 -u $group_id \
+            -g polkitd -s /bin/false polkitd
+    usermod -a -G polkitd alesya
+    
+    sleep 1
+    echo -n -e "...\e[32m[OK]\e[0m **"
+    echo "*"
+  fi
+fi 
+}

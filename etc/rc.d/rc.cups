@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cups_start()
+{
+  if [ -x /etc/init.d/cups ]; then
+    /etc/init.d/cups start
+  fi
+}  

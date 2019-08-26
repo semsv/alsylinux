@@ -1,0 +1,13 @@
+#!/bin/bash
+
+firewall_start()
+{
+# Настройка файервола
+iptables -I INPUT -p icmp -j REJECT
+# отключаем TelNet
+iptables -I INPUT -p tcp --dport=23 -j REJECT
+iptables -I INPUT -p tcp --dport=443 -j REJECT
+iptables -I INPUT -p igmp -j REJECT
+# отключаем NetBIOS
+iptables -I INPUT -p tcp --dport=137:139 -j REJECT 
+}
