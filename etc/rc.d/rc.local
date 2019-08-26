@@ -89,7 +89,7 @@ chmod 4755 /bin/su
 chmod 4755 /usr/lib64/chromium/chrome-sandbox
 
 # Настройка NetworkManager Client
-chmod 4755 /usr/bin/nmcli
+chmod 755 /usr/bin/nmcli
 
 # Настройка команд для пользователей не root
 ln -s /sbin/* /usr/bin/ 2>/dev/null
