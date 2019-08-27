@@ -1,0 +1,9 @@
+#!/bin/bash
+
+sudo_start()
+{
+# Настройка SUDO
+chown root:root /usr/local/bin/sudo
+chmod u+s /usr/local/bin/sudo
+chmod 4755 /bin/su
+}
