@@ -278,11 +278,13 @@ echo "$AppConfigScenario" >> $AppFullName/setup_all.log
 #Переходим в директорию с исходниками программы
 cd $AppFullName >>$AppFullName/setup_all.log
 
-#Если файл конфигурации отсутствует, то прекращаем
-if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
- echo "Error: Configure file $ConfigureFile does not exists!"
- echo "Error: Configure file $ConfigureFile does not exists!" >>$AppFullName/setup_all.log
- exit
+if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
+  #Если файл конфигурации отсутствует, то прекращаем
+  if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
+    echo "Error: Configure file $ConfigureFile does not exists!"
+    echo "Error: Configure file $ConfigureFile does not exists!" >>$AppFullName/setup_all.log
+    exit
+  fi
 fi
 
 if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
