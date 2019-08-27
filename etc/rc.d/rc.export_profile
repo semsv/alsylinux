@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+export_start()
+{
+  if [ -f /etc/profile.d/alsy.sh ]; then
+    echo "" > /etc/profile.d/alsy.sh
+  fi
+  echo "$(cat /mnt/live/lib/init.cfg | grep -E '^LIVEKITNAME')" >> /etc/profile.d/alsy.sh
+  echo "export LIVEKITNAME;" >> /etc/profile.d/alsy.sh
+}
+
+if [ "$1" == "start" ]; then
+  export_start
+else
+  echo "usage: $0 start"
+fi
