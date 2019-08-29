@@ -27,13 +27,6 @@ if [ "$(echo "$1" | egrep "^deactivate://")" != "" ]; then
    GUI="true"
 fi
 
-if [ "$(echo "$1" | egrep "^download://")" != "" ]; then
-   COMMAND="download"
-   PARAM="$(echo "$1" | cut -b 12-)"
-   TARGET="$HOME"
-   GUI="true"
-fi
-
 if [ "$GUI" -a "$SYSTRAY" = "" ]; then
    exec ksystraycmd --ownicon --icon preferences-web-browser-cache --tooltip "in progress: alsy $COMMAND $PARAM $TARGET" \
    SYSTRAY=true SILENT=$SILENT GUI=$GUI AUTODEPS=$AUTODEPS \
@@ -52,41 +45,15 @@ usage()
     echo ""
     echo "Usage:"
     echo ""
-    echo "     # alsy buildscript [ options ]"
     echo "     # alsy [ options ]"
     echo ""
     echo "Explanation:"
     echo ""
-    echo "     # alsy buildscript [ options]:"
-    echo ""
-    echo "          # alsy buildscript download template"
-    echo "             - download fresh empty template for build script from Alsy server"
-    echo "             - it includes all the infos you need to make Alsy bundles"
-    echo ""
-    echo "          # alsy buildscript download [ name ]"
-    echo "             - download build script for given bundle name from Alsy server"
-    echo ""
-    echo "          # alsy buildscript upload [ filename ]"
-    echo "             - upload your build script to Alsy server"
-    echo ""
-    echo "          # alsy buildscript update [ filename ]"
-    echo "             - update existing build script on Alsy server using by file"
-    echo ""
-    echo "          # alsy buildscript delete name"
-    echo "             - delete given build script (including packages) from Alsy server"
-    echo ""
     echo "     # alsy [ options ]"
-    echo ""
-    echo "          # alsy search [ keyword  [ keyword ... ] ]"
-    echo "             - search for keywords on Alsy server, list Alsy bundles which match"
     echo ""
     echo "          # alsy info [ name ]"
     echo "             - print info about given Alsy bundle"
     echo "             - if no name is provided, print info about activated bundles"
-    echo ""
-    echo "          # alsy download [ name ] [ dir ]"
-    echo "             - download Alsy bundle [ name ] and save it in directory [ dir ]"
-    echo "             - if [ dir ] is not specified, save the download to current directory"
     echo ""
     echo "          # alsy activate [ name | filename ]"
     echo "             - activate Alsy Bundle given by filename (already downloaded), or"
@@ -97,8 +64,8 @@ usage()
     echo "               (detach from filesystem, but keep downloaded file)"
     echo ""
     echo "Remarks:"
-    echo "     [ name ] has to be the unique name of alsy bundle, without .sb extension"
-    echo "     [ filename ] has to be real file on filesystem, with .sb extension"
+    echo "     [ name ] has to be the unique name of alsy bundle, without .ab extension"
+    echo "     [ filename ] has to be real file on filesystem, with .ab extension"
 
     if [ "$1" != "" ]; then
        echo
@@ -114,43 +81,6 @@ usage()
 F1=/tmp/alsy-$$-in.tmp
 F2=/tmp/alsy-$$-out.tmp
 trap "rm -f $F1 $F2" EXIT
-
-# Function to ask user for password. If optional argument $1 is given,
-# repeat asking for the same password again
-# $1 = repeat (empty = no repeat)
-#
-get_password()
-{
-   local PASS1 PASS2 MSG
-
-   if [ "$1" = "" ]; then
-      MSG="Enter"
-   else
-      MSG="Create"
-   fi
-
-   echo -ne "$MSG password: " >&2
-   read -s PASS1
-   echo >&2
-
-   if [ "$1" != "" ]; then
-      echo -ne "Retype password again: " >&2
-      read -s PASS2
-      echo >&2
-
-      if [ "$PASS1" != "$PASS2" ]; then
-         echo "Passwords do not match" >&2
-         exit 3
-      fi
-   fi
-
-   if [ "$PASS1" = "" ]; then
-      echo "Password can't be empty" >&2
-      exit 4
-   fi
-   echo "$PASS1"
-}
-
 
 # Print error message and exit
 # $1 = error message
@@ -198,82 +128,6 @@ file_size()
    fi
 }
 
-# download url and show progress
-# $1 = message to display
-# $2 = url to download
-# $3 = target file to store the download
-#
-wget_progress()
-{
-   local dbusRef TGT
-   TGT="$3/$(basename "$2")"
-
-   if [ -r "$TGT" ]; then
-      die "Cannot overwrite existing file $TGT"
-   fi
-
-   if [ "$GUI" ]; then
-      dbusRef="$(kdialog --icon draw-arrow-down --caption "Download in progress" --progressbar "\\n$1            " 100 2>/dev/null)"
-      qdbus $dbusRef Set "" value 0 >/dev/null 2>&1
-      qdbus $dbusRef showCancelButton true >/dev/null 2>&1
-   fi
-
-   wget --progress=dot -O "$TGT" "$2" 2>&1 | fgrep --line-buffered '%' | sed -u -r 's:.*[ .]([0-9]+)% .*:\1:' \
-        | while read LINE; do
-           if [ "$dbusRef" != "" ]; then
-              qdbus $dbusRef Set "" value "$LINE" >/dev/null 2>&1
-              if [ "$(qdbus $dbusRef wasCancelled 2>&1 | egrep 'true|does not exist')" != "" ]; then
-                 rm -f "$TGT"
-                 exit 7
-              fi
-           else
-              echo -ne "\r$LINE% done"
-           fi
-        done
-
-   if [ "$(file_size "$TGT")" -eq 0 ]; then
-      rm -f "$TGT"
-   fi
-
-   if [ "$GUI" ]; then
-      qdbus $dbusRef close 2>/dev/null
-   fi
-
-   echo
-
-   if [ -r "$TGT" ]; then
-      export LASTDOWNLOAD="$TGT"
-   else
-      return 1
-   fi
-}
-
-
-# encode parameter so it can be passed in URL
-# $1 = data to encode
-#
-urlencode()
-{
-   local DATA ORD
-   DATA="$1"
-
-   while [ "$DATA" != "" ]; do
-      LETTER=${DATA:0:1}
-      LC_CTYPE=C printf -v ORD '%d' "'$LETTER"
-      if [ $ORD -ge 48 -a $ORD -le 57 -o $ORD -ge 65 -a $ORD -le 90 -o $ORD -ge 97 -a $ORD -le 122 ]; then
-         echo -n $LETTER
-      else
-         echo -n "%"
-         if [ $ORD -le 15 ]; then
-            echo -n "0"
-         fi
-         LC_CTYPE=C printf '%x' $ORD
-      fi
-      DATA=${DATA:1}
-   done
-}
-
-
 # Return infos about current Alsy (architecture, version, etc)
 # so the server can decide what precompiled bundle to send
 #
@@ -281,87 +135,6 @@ infos()
 {
    echo "arch=$(urlencode "$(uname -m)")&version=$(urlencode "$(cat /etc/alsy-version 2>/dev/null)")&ram=$(urlencode "$(free | awk '/Mem:/ {print $2}')")&cmdline=$(urlencode "$(cat /proc/cmdline)")"
 }
-
-
-# perform HTTP GET (it's actually a post, but servers as get)
-# $1 = url parameters
-# $2 = password request (no request for password if empty)
-#
-get()
-{
-   local PASS INFOS
-
-   echo "$1" > $F1
-   if [ "$2" != "" ]; then
-      PASS="$(get_password)" || exit
-      PASS="$(urlencode "$PASS")"
-   fi
-
-   INFOS=$(infos)
-
-   wget -q -O $F2 --post-file $F1 "https://www.slax.org/slaxcs.php?action=get&$INFOS&pass=$PASS"
-   if [ $? -ne 0 ]; then
-      echo "Error: Download error. Check your network connection."
-   fi
-}
-
-
-# perform HTTP POST, ask for password for given operation
-# $1 = url parameter (upload, update, delete)
-# $2 = input file
-# $3 = password input repeat (empty = no repeat)
-#
-post()
-{
-   local PASS INFOS
-
-   if [ ! -r "$2" ]; then
-      echo "File not found $2" >&2
-      exit 2
-   fi
-
-   PASS=$(get_password $3) || exit
-   PASS="$(urlencode "$PASS")"
-   INFOS=$(infos)
-
-   wget -q -O $F2 --post-file "$2" "https://www.slax.org/slaxcs.php?action=$1&$INFOS&pass=$PASS"
-   if [ $? -ne 0 ]; then
-      echo "Error: Upload error. Check your network connection."
-   fi
-}
-
-
-# Process output file which is response from server
-# If the output contains URL, it will be saved to dir $1
-# The non-url part of the response file is message for user
-# so we'll simply display it.
-# If message from server begins with "Error:", exit 1
-# $1 = directory where to save
-#
-process()
-{
-   local URL MSG
-
-   URL="$(cat "$F2" 2>/dev/null | egrep 'https?://')"
-
-   if [ "$URL" != "" -a "$1" != "" ]; then
-      echo "Downloading $(basename "$URL") ..."
-      wget_progress "Downloading Alsy bundle $(basename "$URL")" "$URL" "$1"
-      if [ $? -ne 0 ]; then
-         die "Error: Download error. Check your network connection."
-      fi
-   fi
-
-   if [ $? -eq 0 ]; then
-      MSG="$(cat "$F2" 2>/dev/null | egrep -vi 'https?://')"
-      if [ "$(echo "$MSG" | egrep "^Error:")" != "" ]; then
-         die "$MSG"
-      else
-         echo "$MSG"
-      fi
-   fi
-}
-
 
 # Check if parameter is empty. If yes, print error and exit
 # $1 = parameter
@@ -392,23 +165,6 @@ get_bundle_storage_dir()
 
    echo $TGT
 }
-
-# cat the requires file and return deps which are really missing
-# $1 = path to requires file
-#
-missing_deps()
-{
-   local REQ EX
-
-   EX="$(print_branches | cut -f 2 | sed -r "s:.*/([0-9]+-)?|[.]sb::")"     #"
-
-   for REQ in $(cat "$1" 2>/dev/null | sed -r "s:[+]:[+]:"); do
-      if ! echo "$EX" | egrep -q "\\b$REQ\\b"; then
-         echo -n "$REQ "
-      fi
-   done
-}
-
 
 # Activate Alsy Bundle
 # $1 = file to activate
@@ -452,21 +208,6 @@ activate()
    mount -n -o loop,ro "$SB" "$TGT"
    if [ $? -ne 0 ]; then
       die "Error mounting of the bundle, perhaps corrupted download"
-   fi
-
-   # activate required bundles
-   DEPS="$(missing_deps $TGT/run/requires)"
-   DEPSCOUNT="$(echo $DEPS | wc -w)"
-   if [ "$DEPS" != "" ]; then
-      if [ "$AUTODEPS" = "true" ]; then Q="0"; else Q="1"; fi
-      if [ "$AUTODEPS" = "" ]; then
-         Q="$(question "$BAS requires $DEPSCOUNT additional bundles to run properly.\n$DEPS\nDownload and activate them now?")"
-      fi
-      if [ "$Q" = "0" ]; then # yes
-         for i in $DEPS; do
-            GUI=$GUI SILENT=true AUTODEPS=true SYSTRAY=$SYSTRAY alsy activate $i
-         done
-      fi
    fi
 
    # add current branch to aufs union
@@ -584,43 +325,6 @@ print_active_bundle_ids()
 
 
 case "$COMMAND" in
-   'buildscript')
-
-      case "$PARAM" in
-         'download')
-            need "$TARGET" "missing buildscript name"
-            get "$COMMAND $PARAM $TARGET"
-            process "$(pwd)" || exit 1
-            if [ "$LASTDOWNLOAD" != "" ]; then
-               chmod a+x "$LASTDOWNLOAD"
-            fi
-         ;;
-         'upload')
-            need "$TARGET" "missing buildscript file"
-            post "$PARAM" "$TARGET" 2
-            process || exit 1
-         ;;
-         'update')
-            need "$TARGET" "missing buildscript file"
-            post "$PARAM" "$TARGET"
-            process || exit 1
-         ;;
-         'delete')
-            need "$TARGET" "missing buildscript name"
-            get "$COMMAND $PARAM $TARGET" 1
-            process || exit 1
-         ;;
-         *)
-            usage
-         ;;
-      esac
-   ;;
-
-   'search')
-      need "$PARAM" "missing search keyword"
-      get "$COMMAND $PARAM $TARGET $4 $5 $6 $7 $8 $9"
-      process
-   ;;
 
    'info')
       if [ "$PARAM" = "" ]; then
@@ -631,34 +335,8 @@ case "$COMMAND" in
       fi
    ;;
 
-   'download')
-      need "$PARAM" "missing Alsy Bundle name"
-      if [ "$TARGET" = "" ]; then TARGET="."; fi
-      get "$COMMAND $PARAM"
-      process "$TARGET"
-
-      if [ "$GUI" -a "$LASTDOWNLOAD" != "" ]; then
-         kdialog --title " " --passivepopup "Alsy bundle downloaded to $LASTDOWNLOAD" 2 2>/dev/null
-      fi
-   ;;
-
    'activate')
-      if [ ! -r "$PARAM" ]; then
-         TGT="$(print_branches | cut -f 2 | egrep -o "/(([0-9]+-)?$PARAMREG(.sb)?\$)")"  #"
-         if [ "$TGT" != "" ]; then
-            if [ "$SILENT" = "" ]; then
-               die "Alsy bundle is already active as $(echo $TGT | tr -d /)"
-            fi
-            exit
-         fi
-         get "download $PARAM"
-         process "$(get_bundle_storage_dir)"
-         if [ -r "$LASTDOWNLOAD" ]; then
-            activate "$LASTDOWNLOAD"
-         fi
-      else
-         activate "$PARAM"
-      fi
+      activate "$PARAM"
    ;;
 
    'deactivate')
