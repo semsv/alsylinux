@@ -1,9 +1,9 @@
-#/bin/sh
+#!/bin/sh
 ############################################################################################################
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.7                                                                                      ###
+###   Версия: 1.0.8                                                                                      ###
 ###   Дата последнего изменения: 16 августа 2019 16:26 пятница                                           ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
@@ -16,7 +16,7 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.7
+version=1.0.8
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -25,6 +25,7 @@ version=1.0.7
 # В версии 1.0.5 добавлена новая возможность сборки из архивного файла
 # В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод инф о использовании программы и версии
 # В версии 1.0.7 добавлены две новые опции
+# В версии 1.0.8 добавлена новая опция
 copyflag="1" 
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
@@ -121,6 +122,7 @@ help()
  echo "  -x,	--xconfig	setup with non-standard configure from config.sh file"
  echo "  -n,	--not-configure	execute \"setup\" command without configure file"
  echo "  -i,	--only-install	execute \"setup\" command without configure file and make, only make install"
+ echo "  -m,	--only-make-prefix	execute \"setup\" command without configure file and compile source as \"make\" and \"make install\" with prefix"
  echo ""
 }
 
@@ -263,6 +265,10 @@ if [ "$Options" == "--xconfig" ]; then
   Options="-x"
 fi
 
+if [ "$Options" == "--only-make-prefix" ]; then
+  Options="-m"
+fi
+
 if [ "$Options" == "-x" ]; then
   AppConfigScenario="config.sh"
   ConfigureFile="$AppConfigScenario"
@@ -278,7 +284,7 @@ echo "$AppConfigScenario" >> $AppFullName/setup_all.log
 #Переходим в директорию с исходниками программы
 cd $AppFullName >>$AppFullName/setup_all.log
 
-if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
+if [[ "$Options" != "-n"  && "$Options" != "-i" && "$Options" != "-m" ]]; then
   #Если файл конфигурации отсутствует, то прекращаем
   if [ "$(ls -1 | grep "$ConfigureFile" 2>/dev/null)" == "" ]; then
     echo "Error: Configure file $ConfigureFile does not exists!"
@@ -287,7 +293,7 @@ if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
   fi
 fi
 
-if [[ "$Options" != "-n"  && "$Options" != "-i" ]]; then
+if [[ "$Options" != "-n"  && "$Options" != "-i" && "$Options" != "-m" ]]; then
   #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
   if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
     make clean >>$AppFullName/setup_all.log 2>/dev/null
@@ -312,7 +318,7 @@ echo "**************************************************************************
 echo "****  CONFIGURE SCRIPT START                                                               *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
-if [[ "$Options" != "-n" && "$Options" != "-i" ]]; then
+if [[ "$Options" != "-n" && "$Options" != "-i" && "$Options" != "-m" ]]; then
   #Выполняем конфигурацию программы
   #./configure --prefix=$AppPrefix/$AppName
   if [ "$Options" == "-d" ]; then  \
@@ -351,15 +357,20 @@ echo "**************************************************************************
 echo "****  MAKEFILE SCRIPT START                                                                *****" >>$AppFullName/setup_all.log
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
+declare makeprefix=""
+if [ "$Options" == "-m" ]; then
+  echo "make PREFIX=$AppPrefix/$AppName"
+  makeprefix="PREFIX=$AppPrefix/$AppName"
+fi
 
 if [ "$Options" != "-i" ]; then
 # Команда компилятору выполнить сборку
 
-  make >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
+  make $makeprefix >> $AppFullName/setup_all.log > $AppFullName/setup_compile.log 2> $AppFullName/setup_compile_err.log
 
 # Также проверим логи, иногда в процессе установки возникают ошибки
   if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
-    if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
+    if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep (ignored) 2>/dev/null)" != "" ]; then
       echo "Error ignored!"
     else
       echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
@@ -379,7 +390,8 @@ echo "****  MAKEFILE INSTALL SCRIPT START                                       
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
 #Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
-make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+echo "make $makeprefix install"
+make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
 
 #Если все хорошо то у нас появляется директория $AppPrefix/$AppName, проверим это:
 if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" == "" ]; then 
