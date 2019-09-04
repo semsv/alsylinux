@@ -4,7 +4,7 @@
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
 ###   Версия: 1.0.8                                                                                      ###
-###   Дата последнего изменения: 16 августа 2019 16:26 пятница                                           ###
+###   Дата последнего изменения: 04 сентября 2019 16:26 среда                                            ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -370,7 +370,7 @@ if [ "$Options" != "-i" ]; then
 
 # Также проверим логи, иногда в процессе установки возникают ошибки
   if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error 2>/dev/null)" != "" ]; then
-    if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep (ignored) 2>/dev/null)" != "" ]; then
+    if [ "$(grep -i "make" $AppFullName/setup_compile_err.log | grep -i error | grep '(ignored)' 2>/dev/null)" != "" ]; then
       echo "Error ignored!"
     else
       echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
@@ -390,8 +390,12 @@ echo "****  MAKEFILE INSTALL SCRIPT START                                       
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
 #Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
-echo "make $makeprefix install"
-make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+if [ "$makeprefix" == "" ]; then
+  make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+else
+  echo "make $makeprefix install"
+  make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+fi
 
 #Если все хорошо то у нас появляется директория $AppPrefix/$AppName, проверим это:
 if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" == "" ]; then 
