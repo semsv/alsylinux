@@ -329,57 +329,6 @@ init_network_dev()
    cat /proc/net/dev | grep : | grep -v lo: | cut -d : -f 1 | tr -d " " | head -n 1
 }
 
-
-# Download data from tftp
-# $1 = target (store downloaded files there)
-#
-download_data_pxe()
-{
-   debug_log "download_data_pxe" "$*"
-   local CMD CLIENT SERVER GW MASK PORT ETH PROTOCOL
-
-   mkdir -p "$1/$LIVEKITNAME"
-
-   cmdline_value ip | while IFS=":" read CLIENT SERVER GW MASK PORT; do
-      echo_green_star >&2
-      echo "Downloading files from $SERVER ..." >&2
-
-      ETH=$(init_network_dev)
-      if [ "$PORT" = "" ]; then PORT="7529"; fi
-
-      # set IP address as given by boot paramter
-      if [ "$CLIENT" != "" -a "$MASK" != "" ]; then
-         ifconfig $ETH "$CLIENT" netmask "$MASK"
-         route add default gw "$GW"
-      else
-         # if client ip is unknown, try to get a DHCP lease
-         udhcpc -i $ETH -f -q
-      fi
-
-      # well known IP address of Google public DNS service
-      echo nameserver 8.8.8.8 >> /etc/resolv.conf
-
-      PROTOCOL=http
-      wget -q -O "$1/PXEFILELIST" "http://$SERVER:$PORT/PXEFILELIST?$(uname -r):$(uname -m)"
-      if [ $? -ne 0 ]; then
-         echo "Error downloading from http://$SERVER:$PORT, trying TFTP" >&2
-         PROTOCOL=tftp
-         tftp -g -r PXEFILELIST -l "$1/PXEFILELIST" $SERVER
-      fi
-
-      cat "$1/PXEFILELIST" | while read FILE; do
-         if [ "$PROTOCOL" = "http" ]; then
-            wget -O "$1/$LIVEKITNAME/$FILE" "http://$SERVER:$PORT/$FILE"
-         else
-            echo "* $FILE ..." >&2
-            tftp -g -r $FILE -l "$1/$LIVEKITNAME/$FILE" $SERVER
-         fi
-      done
-   done
-
-   echo "$1/$LIVEKITNAME"
-}
-
 # Find LIVEKIT data by mounting all devices
 # If found, keep mounted, else unmount
 # $1 = data directory target (mount here)
@@ -408,10 +357,17 @@ find_data_try()
 
       # search for bundles in the mounted directory
       if [ "$(find "$1/$FROM" -maxdepth 1 -name "*.$BEXT" 2>/dev/null)" != "" ]; then
-         # we found at least one bundle/module here
-         mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
-         echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
-         return
+        if [ "$(cmdline_value mntpoint)" = "" ]; then
+          # we found at least one bundle/module here
+          mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
+          echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
+          return
+        elif [ "$(less $1/$FROM/alsy-mnt-point.cfg)" = "$(cmdline_value mntpoint)" ]; then
+          # we found at least one bundle/module here
+          mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
+          echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
+          return
+        fi  
       fi
 
       # unmount twice, since there could be mounted ISO as loop too. If not, it doesn't hurt
@@ -430,12 +386,7 @@ find_data()
    debug_log "find_data" "$*"
 
    local DATA FROM
-
-#   if [ "$(cmdline_value ip)" != "" ]; then
-#      download_data_pxe "$2"
-#      return
-#   fi
-
+   
    FROM="$(cmdline_value from)"
    if [ "$FROM" = "" ]; then FROM="$LIVEKITNAME"; fi
 
