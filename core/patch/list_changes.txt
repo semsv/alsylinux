@@ -3,5 +3,6 @@
 -------- 2 drivers/block/loop.c   ----
 -------- 3 fs/dcache.c            ----
 -------- 4 fs/fcntl.c             ----
+-------- 4 fs/inode.c             ----
 -------- 6 fs/read_write.c        ----
 
