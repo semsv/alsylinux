@@ -22,3 +22,9 @@
 ****************************************
 -------- 1 drivers/block/loop.c     ----
 -------- 2 drivers/block/loop.h     ----
+-------- 3 fs/aufs/f_op.c           ----
+-------- 4 fs/aufs/loop.c           ----
+-------- 5 fs/aufs/loop.h           ----
+-------- 6 fs/aufs/super.c          ----
+-------- 7 include/linux/fs.h       ----
+****************************************
