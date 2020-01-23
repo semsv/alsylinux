@@ -10,6 +10,7 @@
 Этапы применительно к alsy-linux
 
 1. Скачиваем исходники ядра (https://www.kernel.org/) 
+          
           Protocol 	Location
               HTTP 	https://www.kernel.org/pub/
                GIT 	https://git.kernel.org/
