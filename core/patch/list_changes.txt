@@ -30,3 +30,16 @@
 ****************************************
 ************* aufs4-mmap.patch      ****
 ****************************************
+-------- 1 fs/proc/base.c           ----
+-------- 2 fs/proc/nommu.c          ----
+-------- 3 fs/proc/task_mmu.c       ----
+-------- 4 fs/proc/task_nommu.c     ----
+-------- 5 include/linux/mm.h       ----
+-------- 6 include/linux/mm_types.h ----
+-------- 7 kernel/fork.c            ----
+-------- 8 mm/Makefile              ----
+-------- 9 mm/filemap.c             ----
+-------- 10 mm/mmap.c               ----
+-------- 11 mm/nommu.c              ----
+-------- 12 mm/prfile.c             ----
+****************************************
