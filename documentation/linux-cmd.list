@@ -1,0 +1,5 @@
+ld --version
+ldd --version
+gcc --version
+glxinfo | grep version
+glewinfo | grep version
