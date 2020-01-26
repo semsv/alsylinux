@@ -41,3 +41,9 @@ if [ "$(less /etc/group | grep polkitd)" == "" ]; then
   fi
 fi 
 }
+
+if [ "$1" == "start" ]; then
+  polkit_start
+else
+  echo "usage: $0 start"
+fi

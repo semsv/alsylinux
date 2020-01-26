@@ -7,3 +7,9 @@ chown root:root /usr/local/bin/sudo
 chmod u+s /usr/local/bin/sudo
 chmod 4755 /bin/su
 }
+
+if [ "$1" == "start" ]; then
+  sudo_start
+else
+  echo "usage: $0 start"
+fi

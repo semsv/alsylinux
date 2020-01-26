@@ -5,8 +5,8 @@ docbook_start()
   #Проверим сначала что папка есть
   if [ "$(ls -1 /mnt/live/memory/bundles | grep "docbook" 2>/dev/null)" != "" ]; then
     cd /usr/src/alsy-source/docbook-xml
-    ./config.sh > 1_script.log 2> 1err_script.log
+    ./config.sh
     cd /usr/src/alsy-source/docbook-xsl
-    ./config.sh > 2_script.log 2> 2err_script.log
+    ./config.sh
   fi
 } 

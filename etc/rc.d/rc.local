@@ -7,9 +7,13 @@
 # make an /etc/rc.d/rc.local_shutdown script and put those
 # commands in there.
 
+logdir="/tmp/alsy-start-log"
+mkdir -p "$logdir"
+
 # Настройка doc book xml
-. /etc/rc.d/rc.docbook
-docbook_start
+. /etc/rc.d/rc.docbook 
+docbook_start > $logdir/docbook.log 2> $logdir/docbook_err.log
+echo -e "DOCBOOK XML START................................................\e[32m[OK]\e[0m"
 
 # Настройка демона печати
 . /etc/rc.d/rc.cups
@@ -25,7 +29,12 @@ sudo_start
 
 # Настройка SSHD
 . /etc/rc.d/rc.sshd
-sshd_start
+sshd_start >$logdir/rc.sshd.log 2>$logdir/rc.sshd_err.log
+echo -e "SSHD START................................................\e[32m[OK]\e[0m"
+
+# Настройка ConsoleKit
+. /etc/rc.d/rc.ConsoleKit
+console_start >$logdir/rc.ConsoleKit.log 2>$logdir/rc.ConsoleKit_err.log
 
 #Проверим сначала что папка есть
 if [ "$(ls -1 /mnt/live/memory/bundles | grep "glibc-2.29" 2>/dev/null)" != "" ]; then
@@ -47,7 +56,8 @@ fi
 # Для каталога /root подкл вирт диск
 if [ "$(ls -l /mnt/live/memory/data | grep "root.vhd" 2>/dev/null)" != "" ]; then
   mount -t ext3 /mnt/live/memory/data/root.vhd /root
-fi  
+fi
+
 # Настройки файла подкачки
 if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; then
   mkswap /mnt/live/memory/data/tmp.swap
@@ -80,8 +90,17 @@ ln -s /bin/* /usr/bin 2>/dev/null
 
 # Настройка выключения компьютера
 echo "poweroff -i -f" > /etc/cron.daily/poweroff
+chmod a+rwx /etc/cron.daily/poweroff
 
 # Монтируем устройства
-/etc/rc.d/mount_device
+. /etc/rc.d/rc.mount_device
+mount_device > $logdir/rc.mount_device.log 2> $logdir/rc.mount_device_err.log
+echo -e "MOUNT DEVICES................................................\e[32m[OK]\e[0m"
+
+# Помогаем SMPlayer
+rm -r /tmp/qtsingleapp-smplay-ca73-3e7-lockfile
+
+# Помогаем Midnoght Commander
+chown -R alesya:alesya /tmp/mc-alesya
 
 chmod 0 /etc/rc.d/rc.local

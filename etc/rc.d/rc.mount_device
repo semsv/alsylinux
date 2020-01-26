@@ -1,0 +1,76 @@
+#!/bin/sh
+
+mount_device() {
+
+declare -i lnum
+declare -i inum
+inum=0
+lnum=0
+
+echo "0" > /tmp/~ismounthome~.alsy.tmp
+
+for ((lnum=1;lnum<=2;lnum++))
+do
+# Подключение диска
+blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE; do
+  let inum=inum+1
+  MNTPOINT=/media/vhdd$inum
+  SWAPFILE=$MNTPOINT/alsy-tmp.swap
+  STEAMFILE=$MNTPOINT/Steam.vhd
+  HOMEFILE=$MNTPOINT/home.vhd
+  
+  mkdir -p $MNTPOINT
+  if [ "$(mount -l | grep $MNTPOINT | grep $DEVICE)" == "" ]; then
+    mount $DEVICE $MNTPOINT
+    sleep 1
+    a=0
+  else
+    a=1
+  fi
+  ismounthome="$(cat /tmp/~ismounthome~.alsy.tmp)"
+# Монтируем устройство для Steam "/home/alesya/.local/share/Steam"
+  if [ -f $STEAMFILE ]; then
+    echo "STEAM1"
+    echo "$ismounthome"
+  if [ $ismounthome = "1" ]; then
+    if [ ! -d /home/alesya/.local/share/Steam ]; then
+      mkdir -p /home/alesya/.local/share/Steam
+    fi
+    if [ "$(mount -l | grep $MNTPOINT | grep $STEAMFILE)" == "" ]; then
+      mount $STEAMFILE /home/alesya/.local/share/Steam
+      if [ $? -eq 0 ]; then
+        a="1"
+      fi
+    fi
+  fi
+  fi
+# Монтируем устройство для домашней директории "/home"
+  if [ -f $HOMEFILE ]; then
+    if [ "$(mount -l | grep /home | grep home.vhd)" == "" ]; then
+      mount $HOMEFILE /home
+      if [ $? -eq 0 ]; then
+        a="1"
+        echo "1" > /tmp/~ismounthome~.alsy.tmp
+      fi
+    else
+      echo "1" > /tmp/~ismounthome~.alsy.tmp
+    fi
+  fi
+# Подключаем SWAP FILE если он есть
+  if [ -f $SWAPFILE ]; then
+  if [ "$(swapon -s)" == "" ]; then
+    mkswap -L "alsy swap file" $SWAPFILE
+    swapon -p 32767 $SWAPFILE
+    if [ $? -eq 0 ]; then
+      a="1"
+    fi
+  fi
+  fi
+  if [ $a == "1" ]; then
+    continue
+  else
+    umount $MNTPOINT
+  fi
+done
+done
+}

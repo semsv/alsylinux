@@ -24,42 +24,17 @@
 
 start() {
 
-if [ "$(less /etc/group | grep polkitd)" == "" ]; then
-echo "Alsy setup polkit........"
-# Настройка polkit
-chmod -v 4755 /usr/src/tools/polkit-0.116/lib/polkit-1/polkit-agent-helper-1
-chmod -v 4755 /lib/polkit-1/polkit-agent-helper-1
-chmod -v 4755 /lib64/polkit-1/polkit-agent-helper-1
-chmod -v 4755 /usr/lib/polkit-1/polkit-agent-helper-1
-chmod -v 4755 /usr/lib64/polkit-1/polkit-agent-helper-1
-
-if [ -f /sbin/pkexec ]; then
-chmod -v 4755 /sbin/pkexec
-fi
-
-chmod -v 4755 /bin/pkexec
-chmod -v 4755 /usr/bin/pkexec
-chmod -v 4755 /usr/local/bin/pkexec
-chmod -v 4755 /usr/src/tools/polkit-0.116/bin/pkexec
-
-chmod 700 /etc/polkit-1/rules.d
-chmod 700 /usr/src/tools/polkit-0.116/etc/polkit-1/rules.d
-
-group_id="28"
-groupadd -fg $group_id polkitd &&
-useradd -c "PolicyKit Daemon Owner" -d /etc/polkit-1 -u $group_id \
-        -g polkitd -s /bin/false polkitd
-usermod -a -G polkitd alesya
-fi
+. /etc/rc.d/rc.polkit
+polkit_start
 
     #********** BEG BLOCK 1: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
     #>>>> A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
     dbus_run_already="0"
-    echo "*** ALESYA (ALSY) LINUX: $(less /etc/alsy-version) ****"
-    echo "*** ALSY - Starting system message bus..."
-    echo "**********************************"    
+    echo "*** ALESYA (ALSY) LINUX: $(less /etc/alsy-version) ****" >> /var/log/alsy-messagebus.log
+    echo "*** ALSY - Starting system message bus..." >> /var/log/alsy-messagebus.log
+    echo "**********************************" >> /var/log/alsy-messagebus.log    
     if [ "`pgrep dbus-daemon`" = "" ]; then # ru: Собственно просто проверяем что D-BUS еще не запущен
-      echo "*** ALSY - remove dbus temporary files..."
+      echo "*** ALSY - remove dbus temporary files..." >> /var/log/alsy-messagebus.log
       # ru: Убрать след две строки и перезапустить D-BUS можно будет только перезагрузив компьютер
       rm -r /var/run/dbus/pid 2>/dev/null
       rm -r /var/run/dbus/dbus.pid 2>/dev/null
@@ -74,8 +49,8 @@ fi
     #chmod 1777 /usr/src/tools/dbus-1.10.22/bin/dbus-uuidgen
     #chmod 1777 /usr/src/tools/dbus-1.10.22/bin/dbus-daemon
     #
-    echo "$(dbus-daemon --version | grep -i bus)" # ru: Выводим версию DBUS, такая фишка вот от Alsy Linux
-    echo "**********************************"
+    echo "$(dbus-daemon --version | grep -i bus)" >> /var/log/alsy-messagebus.log # ru: Выводим версию DBUS, такая фишка вот от Alsy Linux
+    echo "**********************************" >> /var/log/alsy-messagebus.log
     #<<<< End: A special script unit designed for the correct operation of Alsy linux, author Sevastyanov S.V 2017-09-22
     #********** END BLOCK 1: SPECIAL SCRIPTS ALESYA LINUX FOR RIGHT STARTING KDE WITH D-BUS ****************************************************************
     if [ "$(echo "$dbus_run_already")" == "1" ];
@@ -148,4 +123,4 @@ case "$1" in
         echo $"Usage: $0 {start|stop|status|restart|reload}"
         ;;
 esac
-exit $RETVAL
+exit $RETVAL 

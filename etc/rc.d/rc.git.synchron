@@ -1,0 +1,34 @@
+#Убедимся, что у нас файл последней версии если нет то скачиваем
+#Проверяем наличие файла git.ignore
+git_synchron_flag="0"
+
+if [ $git_synchron_flag == "1" ]; then
+if [ ! -f "/etc/rc.d/git.ignore" ]; then
+ lv_git_syn="$(git.synchron /etc/rc.d/rc.local)"
+ if [ "$lv_git_syn" != "0" ]; then
+   if [ "$lv_git_syn" != "1" ]; then
+#     По причине какой-нибудь ошибки, вершувшейся из вызова скрипта git.synchron
+#     синхронизация, здесь не выполняется, записываем код ошибки в лог и все
+      echo "$(date) exit $lv_git_syn" >> /var/log/rc.local.log
+#     exit 2
+   else
+   # Здесь мы знаем что скрипт вернул "1" что значит что ошибок небыло но файл нуждается в синхронизации
+   # Надо: 
+   # 1. сохранить старый файл под именем "git.ignore" 
+   # 2. скачать свежий файл
+   # 3. проверить его контрольную сумму
+   # 4. запустить его на выполнение
+   # 5. выйти из этого скрипта
+   mv /etc/rc.d/rc.local /etc/rc.d/git.ignore
+   wget -O /etc/rc.d/rc.local "https://github.com/semsv/alsylinux/raw/master/etc/rc.d/rc.local"
+   echo "$(date) granted success" >> /var/log/rc.local.log
+#   exit 1
+   fi
+ else
+   echo "$(date) exit 0" >> /var/log/rc.local.log
+#   exit 0
+ fi
+fi
+fi
+#echo "git ignore"
+#exit
