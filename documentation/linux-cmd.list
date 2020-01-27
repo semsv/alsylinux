@@ -1,5 +1,20 @@
-ld --version
-ldd --version
-gcc --version
-glxinfo | grep version
-glewinfo | grep version
+1. Узнать версию BinUtils
+  ld --version
+
+2. Узнать версию GLIBC  
+  ldd --version
+
+3. Узнать версию gcc
+  gcc --version
+
+4. Узнать версию OpenGL
+  glxinfo | grep version
+
+5. Узнать версию Mesa
+  glewinfo | grep version
+  
+6. Создание образа жесткого диска
+  dd if=/dev/sda2 bs=8M conv=sync,noerror | gzip -c > /mnt/backup/sda2.img.gz
+  
+7. Восстановление образа жесткого диска
+  gunzip -c /mnt/backup/sda2.img.gz | dd of=/dev/sda2 conv=sync,noerror bs=8M
