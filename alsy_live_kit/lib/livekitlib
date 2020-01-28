@@ -167,6 +167,7 @@ init_devs()
    modprobe loop 2>/dev/null
    modprobe squashfs 2>/dev/null
    modprobe fuse 2>/dev/null
+   modprobe nvme
 }
 
 # Activate zram (auto-compression of RAM)
