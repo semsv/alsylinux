@@ -18,3 +18,9 @@
   
 7. Восстановление образа жесткого диска
   gunzip -c /mnt/backup/sda2.img.gz | dd of=/dev/sda2 conv=sync,noerror bs=8M
+
+8. Установка заголовочных файлов ядра линукс
+  make mrproper
+  make INSTALL_HDR_PATH=dest headers_install
+  find dest/include \( -name .install -o -name ..install.cmd \) -delete
+  cp -rv dest/include/* /usr/include
