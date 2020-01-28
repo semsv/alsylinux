@@ -32,3 +32,9 @@
 
 10. Найти и убить процессы java
   kill $(pgrep -l java | cut -d " " -f 1)
+
+11. Сравнение директорий два варианта: 
+а.) по содержимому директорий ( проверяет сам факт - наличие или отсутствие файлов, содержимое ф. не смотрит и не сравнивает)
+b.) по содержимому файлов ( помимо наличия, сравнивает и содержимое одинаковых по имени файлов, то есть формирует патч )   
+  a.) diff -aqr /mnt/live/memory/data/alsylin/modules /media/MIREX/alsylin/modules > /usr/src/changelst.txt
+  b.) diff -Naur /mnt/live/memory/data/alsylin/modules /media/MIREX/alsylin/modules > /usr/src/file.patch
