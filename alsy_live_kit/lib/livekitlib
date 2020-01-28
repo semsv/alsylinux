@@ -170,36 +170,6 @@ init_devs()
    modprobe nvme
 }
 
-# Activate zram (auto-compression of RAM)
-# Compressed RAM consumes 1/2 or even 1/4 of original size
-# Setup static size of 500MB
-#
-# Activate swap
-init_swap()
-{
-# >> 2019-05-18 Sevastyanov S.V.
-if [ "$SWAPFILE_IS_ENABLED" ]; then
-# << 2019-05-18 Sevastyanov S.V.
-# >> 2017-09-12 Sevastyanov S.V.
-   debug_log "init_zram" "$*"
-   echo_green_star
-   #echo "Setting dynamic RAM compression using ZRAM"
-   echo "Setting SWAP"
-   if [ "$(ls -1 /memory/data/ | grep tmp.swap 2>/dev/null)" == "" ]; then
-     dd if=/dev/zero of=/memory/data/tmp.swap bs=1M count=1024
-   fi
-   #echo 4294967296 > /sys/block/zram0/disksize # 512MB
-   #mkswap /dev/zram0 >/dev/null
-   #swapon /dev/zram0 -p 32767
-   mkswap /memory/data/tmp.swap >/dev/null
-   swapon /memory/data/tmp.swap -p 32767
-   echo 75 > /proc/sys/vm/swappiness
-# << 2017-09-12 Sevastyanov S.V.
-# >> 2019-05-18 Sevastyanov S.V.
-fi 
-# << 2019-05-18 Sevastyanov S.V.
-}
-
 # load the AUFS kernel module if needed
 #
 init_aufs()
@@ -278,6 +248,10 @@ device_bestfs()
       FS="vfat"
    elif [ "$FS" = "ntfs" ]; then
       FS="ntfs-3g"
+   elif [ "$FS" = "ext3" ]; then
+      FS="ext3"   
+   elif [ "$FS" = "ext4" ]; then
+      FS="ext4"
    fi
    echo "-t $FS"
 }
