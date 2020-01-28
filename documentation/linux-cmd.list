@@ -29,3 +29,6 @@
   a=$(cat /proc/meminfo | grep MemTotal | cut -d ":" -f 2 | sed s/' '//g | sed s/'kB'//g)
   let b=a-a*25/100
   echo $b
+
+10. Найти и убить процессы java
+  kill $(pgrep -l java | cut -d " " -f 1)
