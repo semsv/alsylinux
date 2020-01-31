@@ -1,6 +1,9 @@
-git clone https://github.com/semsv/alsylinux
-git add initrfs.img
+-- Настройка того кто делает коммиты
 git config --global user.email semen_s84@mail.ru
 git config --global user.name semsv
+-- Клонируем репозитарий
+git clone https://github.com/semsv/alsylinux
+-- Добавляем файл, коммитем и отправляем на сервер
+git add initrfs.img
 git commit -m "$(date)"
 git push
