@@ -112,11 +112,11 @@ alsymnt="alsy.mntpoint"
   else
     alsymagicnum="$(cmdline_value mntpoint)"
     if [ -f  "$1/$alsymnt" ]; then
-      if [ "cat $1/$alsymnt" | grep "$alsymagicnum" ]; then
+      if [ "$(cat "$1/$alsymnt" | grep "$alsymagicnum")" != "" ]; then
         echo "1"
       else
         echo "0"
-      fi      
+      fi
     else
       echo "0"
     fi
