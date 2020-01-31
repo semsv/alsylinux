@@ -15,6 +15,7 @@
   
 6. Создание образа жесткого диска
   dd if=/dev/sda2 bs=8M conv=sync,noerror | gzip -c > /mnt/backup/sda2.img.gz
+  su -c "dd if=/dev/sdb3 bs=4096 conv=sync,noerror | gzip -c > /mnt/backup/sdb3.img.gz"
   
 7. Восстановление образа жесткого диска
   gunzip -c /mnt/backup/sda2.img.gz | dd of=/dev/sda2 conv=sync,noerror bs=8M
