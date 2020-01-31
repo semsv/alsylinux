@@ -277,7 +277,7 @@ device_bestfs()
    elif [ "$FS" = "btrfs" ]; then
       FS="btrfs"
    elif [ "$FS" = "xfs" ]; then
-      FS="btrfs"
+      FS="xfs"
    fi
    echo "-t $FS"
 }
