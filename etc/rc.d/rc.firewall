@@ -38,6 +38,8 @@ firewall_start()
    $IPTABLES -p tcp --dport=80 -j REJECT
    # SSH пусть работает только в локальной сети
    sudo iptables -A INPUT -s 192.168.1.0/24 -p tcp --dport 22 -j ACCEPT
+   # Блокируем диапазон адресов
+   sudo iptables -A INPUT -m iprange --src-range 192.168.1.200-192.168.1.255 -j DROP
 }
 
   if [ "$1" == "start" ]; then
