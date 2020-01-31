@@ -187,7 +187,7 @@ init_devs()
    modprobe loop 2>/dev/null
    modprobe squashfs 2>/dev/null
    modprobe fuse 2>/dev/null
-   modprobe nvme
+   modprobe nvme 2>/dev/null
 }
 
 # load the AUFS kernel module if needed
