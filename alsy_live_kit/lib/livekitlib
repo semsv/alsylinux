@@ -102,6 +102,26 @@ cmdline_value()
    cat /proc/cmdline | egrep -o "(^|[[:space:]])$1=[^[:space:]]+" | tr -d " " | cut -d "=" -f 2- | tail -n 1
 }
 
+#
+# $1 = parameter to search mount point = directory where current mount device for check
+# $2 = parameter to compare magic num with file in directory where current mount device for check
+check_point_mount()
+{
+alsymnt="alsy.mntpoint"
+  if [ "$(cmdline_value mntpoint)" = "" ]; then
+    echo "1"
+  elif
+    if [ -f  "$1/$alsymnt" ]; then
+      if [ "cat $1/$alsymnt" | grep "$2" ]; then
+        echo "1"
+      else
+        echo "0"
+      fi      
+    else
+      echo "0"
+    fi
+  fi  
+}
 
 # test if the script is started by root user. If not, exit
 #
