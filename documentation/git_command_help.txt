@@ -3,3 +3,4 @@ git add initrfs.img
 git config --global user.email semen_s84@mail.ru
 git config --global user.name semsv
 git commit -m "$(date)"
+git push origin master
