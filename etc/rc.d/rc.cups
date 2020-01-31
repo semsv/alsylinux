@@ -6,3 +6,9 @@ cups_start()
     /etc/init.d/cups start
   fi
 }  
+
+  if [ "$1" == "start" ]; then
+    cups_start
+  else
+    echo "usage: $0 start"
+  fi

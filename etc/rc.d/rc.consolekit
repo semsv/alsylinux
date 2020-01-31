@@ -1,0 +1,45 @@
+#!/bin/bash
+
+console_start()
+{
+  
+  
+  if [ "$(ls -l /mnt/live/memory/bundles/ | grep ConsoleKit-0.4.6)" != "" ]; then
+    if [ -d /var/run/ConsoleKit ]; then
+      rm -rd /var/run/ConsoleKit
+    fi
+  fi
+  ln -s /usr/src/tools/ConsoleKit-0.4.6/var/run/ConsoleKit /var/run/ConsoleKit
+
+cat > /usr/src/tools/ConsoleKit-0.4.6/lib/ConsoleKit/run-session.d/pam-foreground-compat.ck << "EOF"
+#!/bin/sh
+TAGDIR=/var/run/console
+
+[ -n "$CK_SESSION_USER_UID" ] || exit 1
+[ "$CK_SESSION_IS_LOCAL" = "true" ] || exit 0
+
+TAGFILE="$TAGDIR/`getent passwd $CK_SESSION_USER_UID | cut -f 1 -d:`"
+
+if [ "$1" = "session_added" ]; then
+    mkdir -p "$TAGDIR"
+    echo "$CK_SESSION_ID" >> "$TAGFILE"
+fi
+
+if [ "$1" = "session_removed" ] && [ -e "$TAGFILE" ]; then
+    sed -i "\%^$CK_SESSION_ID\$%d" "$TAGFILE"
+    [ -s "$TAGFILE" ] || rm -f "$TAGFILE"
+fi
+EOF
+#chmod -v 644 /usr/src/tools/ConsoleKit-0.4.6/lib/ConsoleKit/run-session.d/pam-foreground-compat.ck
+chmod -v 755 /usr/src/tools/ConsoleKit-0.4.6/lib/ConsoleKit/run-session.d/pam-foreground-compat.ck 
+
+rm -rd /usr/lib/ConsoleKit
+ln -s /usr/src/tools/ConsoleKit-0.4.6/lib/ConsoleKit /usr/lib/ConsoleKit
+
+}
+
+if [ "$1" == "start" ]; then
+  console_start
+else
+  echo "usage: $0 start"
+fi

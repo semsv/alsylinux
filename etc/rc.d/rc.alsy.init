@@ -1,0 +1,134 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.local:  Local system initialization script.
+#
+# Put any local startup commands in here.  Also, if you have
+# anything that needs to be run at shutdown time you can
+# make an /etc/rc.d/rc.local_shutdown script and put those
+# commands in there.
+
+logdir="/tmp/alsy-start-log"
+mkdir -p "$logdir"
+
+if [ -x /etc/rc.d/rc.M ]; then
+ sh /etc/rc.d/rc.M
+fi
+
+# Настройка doc book xml
+if [ -x /etc/rc.d/rc.docbook ]; then
+  sh /etc/rc.d/rc.docbook docbook_start > $logdir/docbook.log 2> $logdir/docbook_err.log
+  echo -e "DOCBOOK XML START................................................\e[32m[OK]\e[0m"
+  chmod 0 /etc/rc.d/rc.docbook
+fi
+
+# Настройка SUDO
+if [ -x /etc/rc.d/rc.sudo ]; then
+  sh /etc/rc.d/rc.sudo start
+fi
+
+# Настройка ConsoleKit
+if [ -x /etc/rc.d/rc.consolekit ]; then
+  sh /etc/rc.d/rc.consolekit start >$logdir/rc.ConsoleKit.log 2>$logdir/rc.ConsoleKit_err.log
+fi
+
+#Проверим сначала что папка есть
+if [ "$(ls -1 /mnt/live/memory/bundles | grep "glibc-2.29" 2>/dev/null)" != "" ]; then
+ echo -e "GLIBC-2.29 ........................................\e[32m[OK]\e[0m"
+else
+ if [ "$(ldd --version | grep "ldd" 2>/dev/null)" == "ldd (GNU libc) 2.29" ]; then
+   echo -e "GLIBC-2.29 ........................................\e[32m[OK]\e[0m"
+ else  
+   echo "GLIBC-2.29........................................[DISABLE]"
+ fi
+fi
+
+if [ "$(ls -1 /mnt/live/memory/bundles | grep "glib-2.61.1" 2>/dev/null)" != "" ]; then
+  echo -e "GLIB-2.61.1 ........................................\e[32m[OK]\e[0m"
+  mv /usr/src/tools/glib-2.61.1 /usr/src/tools/glib-2.61.x
+  ln -s /usr/src/tools/glib-2.61.x /usr/src/tools/glib-2.61.1
+fi
+
+# Для каталога /root подкл вирт диск
+if [ "$(ls -l /mnt/live/memory/data | grep "root.vhd" 2>/dev/null)" != "" ]; then
+  mount -t ext3 /mnt/live/memory/data/root.vhd /root
+fi
+
+# Настройки файла подкачки
+if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; then
+  mkswap /mnt/live/memory/data/tmp.swap
+  swapon /mnt/live/memory/data/tmp.swap -p 32767
+fi
+
+# Настройки ядра
+if [ -x /etc/rc.sysctl ]; then
+. /etc/rc.sysctl start >$logdir/rc.sysctl.log 2>$logdir/rc.sysctl_err.log
+fi
+
+#echo 'sysctl -w vm.overcommit_memory="2"' >> /etc/cron.hourly/sysctl
+#echo 'mv /etc/cron.hourly/sysctl /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
+#echo 'chmod 0 /etc/cron.hourly/sysctl.exec' >> /etc/cron.hourly/sysctl
+#chmod a+rwx /etc/cron.hourly/sysctl
+#crontab /etc/rc.d/crontab.sysctl
+
+# Настройка chromium
+chmod 4755 /usr/lib64/chromium/chrome-sandbox
+
+# Настройка NetworkManager Client
+chmod 755 /usr/bin/nmcli
+
+# Настройка команд для пользователей не root
+ln -s /sbin/* /usr/bin/ 2>/dev/null
+ln -s /usr/sbin/* /usr/bin/ 2>/dev/null
+ln -s /bin/* /usr/bin 2>/dev/null
+
+# Настройка выключения компьютера
+echo "poweroff -i -f" > /etc/cron.daily/poweroff
+chmod a+rwx /etc/cron.daily/poweroff
+
+# Помогаем SMPlayer
+if [ -f /tmp/qtsingleapp-smplay-ca73-3e7-lockfile ]; then
+  rm -r /tmp/qtsingleapp-smplay-ca73-3e7-lockfile
+fi
+
+# Помогаем Midnoght Commander
+chown -R alesya:alesya /tmp/mc-alesya
+
+# Start D-Bus:
+if [ -x /etc/rc.d/rc.messagebus ]; then
+  sh /etc/rc.d/rc.messagebus start > $logdir/rc.messagebus.log 2> $logdir/rc.messagebus_err.log
+fi
+
+# Start wicd or networkmanager:
+if [ -x /etc/rc.d/rc.wicd -a -x /usr/sbin/wicd ]; then
+  sh /etc/rc.d/rc.wicd start
+elif [ -x /etc/rc.d/rc.networkmanager ]; then
+  sh /etc/rc.d/rc.networkmanager start > $logdir/rc.networkmanager.log 2> $logdir/rc.networkmanager_err.log
+fi
+
+# Настройка файервола
+if [ -x /etc/rc.d/rc.firewall ]; then
+  sh /etc/rc.d/rc.firewall start
+fi
+
+# Настройка демона печати
+if [ -x /etc/rc.d/rc.cups ]; then
+  sh /etc/rc.d/rc.cups start
+fi
+
+# Настройка SSHD
+if [ -x /etc/rc.d/rc.sshd ]; then
+  sh /etc/rc.d/rc.sshd sshd_start >$logdir/rc.sshd.log 2>$logdir/rc.sshd_err.log
+  echo -e "SSHD START................................................\e[32m[OK]\e[0m"
+fi
+
+# Монтируем устройства
+. /etc/rc.d/rc.mount_device
+mount_device > $logdir/rc.mount_device.log 2> $logdir/rc.mount_device_err.log
+echo -e "MOUNT DEVICES................................................\e[32m[OK]\e[0m"
+
+# Load ALSA (sound) defaults:
+if [ -x /etc/rc.d/rc.alsa ]; then
+  sh /etc/rc.d/rc.alsa start >/dev/null
+fi
+
+chmod 0 /etc/rc.d/rc.local
