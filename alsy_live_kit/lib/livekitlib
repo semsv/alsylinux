@@ -269,13 +269,15 @@ device_bestfs()
    elif [ "$FS" = "ntfs" ]; then
       FS="ntfs-3g"
    elif [ "$FS" = "ext2" ]; then
-      FS="ext2"      
+      FS="ext2"
    elif [ "$FS" = "ext3" ]; then
-      FS="ext3"   
+      FS="ext3"
    elif [ "$FS" = "ext4" ]; then
       FS="ext4"
    elif [ "$FS" = "btrfs" ]; then
-      FS="btrfs"      
+      FS="btrfs"
+   elif [ "$FS" = "xfs" ]; then
+      FS="btrfs"
    fi
    echo "-t $FS"
 }
