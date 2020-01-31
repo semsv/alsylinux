@@ -2142,3 +2142,20 @@ index 000000000000..e7b9417537fb
 +++ b/tools/testing/selftests/rseq/settings
 @@ -0,0 +1 @@
 +timeout=0	
+
+diff --git a/sound/aoa/codecs/onyx.c b/sound/aoa/codecs/onyx.c
+index d2d96ca082b7..6224fd3bbf7c 100644
+--- a/sound/aoa/codecs/onyx.c
++++ b/sound/aoa/codecs/onyx.c
+@@ -74,8 +74,10 @@ static int onyx_read_register(struct onyx *onyx, u8 reg, u8 *value)
+ 		return 0;
+ 	}
+ 	v = i2c_smbus_read_byte_data(onyx->i2c, reg);
+-	if (v < 0)
++	if (v < 0) {
++		*value = 0;
+ 		return -1;
++	}
+ 	*value = (u8)v;
+ 	onyx->cache[ONYX_REG_CONTROL-FIRSTREGISTER] = *value;
+ 	return 0;
