@@ -104,15 +104,15 @@ cmdline_value()
 
 #
 # $1 = parameter to search mount point = directory where current mount device for check
-# $2 = parameter to compare magic num with file in directory where current mount device for check
 check_point_mount()
 {
 alsymnt="alsy.mntpoint"
   if [ "$(cmdline_value mntpoint)" = "" ]; then
     echo "1"
-  elif
+  else
+    alsymagicnum="$(cmdline_value mntpoint)"
     if [ -f  "$1/$alsymnt" ]; then
-      if [ "cat $1/$alsymnt" | grep "$2" ]; then
+      if [ "cat $1/$alsymnt" | grep "$alsymagicnum" ]; then
         echo "1"
       else
         echo "0"
@@ -352,12 +352,7 @@ find_data_try()
 
       # search for bundles in the mounted directory
       if [ "$(find "$1/$FROM" -maxdepth 1 -name "*.$BEXT" 2>/dev/null)" != "" ]; then
-        if [ "$(cmdline_value mntpoint)" = "" ]; then
-          # we found at least one bundle/module here
-          mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
-          echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
-          return
-        elif [ "$(less $1/$FROM/alsy-mnt-point.cfg)" = "$(cmdline_value mntpoint)" ]; then
+        if [ "$(check_point_mount $1/$FROM)" == "1" ]; then
           # we found at least one bundle/module here
           mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
           echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
