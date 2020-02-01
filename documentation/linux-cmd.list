@@ -39,3 +39,6 @@
 b.) по содержимому файлов ( помимо наличия, сравнивает и содержимое одинаковых по имени файлов, то есть формирует патч )   
   a.) diff -aqr /mnt/live/memory/data/alsylin/modules /media/MIREX/alsylin/modules > /usr/src/changelst.txt
   b.) diff -Naur /mnt/live/memory/data/alsylin/modules /media/MIREX/alsylin/modules > /usr/src/file.patch
+
+12. Поиск файла по имени игнорируя регистр
+ su -c "find /mnt/live/memory/bundles -iname pulseaudio"
