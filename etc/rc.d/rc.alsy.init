@@ -55,8 +55,16 @@ fi
 
 # Настройки файла подкачки
 if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; then
-  mkswap /mnt/live/memory/data/tmp.swap
-  swapon /mnt/live/memory/data/tmp.swap -p 32767
+  SWAPFILE="/mnt/live/memory/data/tmp.swap"
+  if [ "$(swapon -s)" == "" ]; then
+    mkswap -L "alsy swap file" $SWAPFILE 2>/dev/null
+    swapon -p 32767 $SWAPFILE 2>/dev/null
+    if [ $? -eq 0 ]; then
+      a="1"
+    fi
+  fi  
+#  mkswap /mnt/live/memory/data/tmp.swap
+#  swapon /mnt/live/memory/data/tmp.swap -p 32767
 fi
 
 # Настройки ядра
