@@ -1,8 +1,8 @@
 1. Узнать версию BinUtils
-  ld --version
+  *ld --version*
 
 2. Узнать версию GLIBC  
-  ldd --version
+  *ldd --version*
 
 3. Узнать версию gcc
   gcc --version
