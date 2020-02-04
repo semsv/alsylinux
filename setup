@@ -336,7 +336,7 @@ if [[ "$Options" != "-n" && "$Options" != "-i" && "$Options" != "-m" ]]; then
   #FIX BUG:1 BEGIN
   #Проверяем наличие Makefile
   if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
-    cp -r $AppFullName/.Makefile.alsycpmake Makefile
+    cp -r $AppFullName/.Makefile.alsycpmake Makefile 2>/dev/null
   fi
   #FIX BUG:1 END
 
