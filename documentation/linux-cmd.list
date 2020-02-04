@@ -45,5 +45,9 @@ b.) по содержимому файлов ( помимо наличия, ср
  
 13. Чтение метки диска (LABEL)
   blkid | grep -E -v "/loop" | sed -r "s/.*LABEL=//" | cut -d '"' -f 2
+
 14. Обновление установщика модулей питона (встраиваемая утилита питона)
   python3.6 -m pip install -U pip
+  Примеры установки доп модулей для питона:
+    pip install pycups
+    pip install virtualenv
