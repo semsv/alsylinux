@@ -187,7 +187,7 @@ init_devs()
    modprobe loop 2>/dev/null
    modprobe squashfs 2>/dev/null
    modprobe fuse 2>/dev/null
-   modprobe nvme 2>/dev/null
+   modprobe nvme
 }
 
 # load the AUFS kernel module if needed
@@ -277,7 +277,7 @@ device_bestfs()
    elif [ "$FS" = "btrfs" ]; then
       FS="btrfs"
    elif [ "$FS" = "xfs" ]; then
-      FS="xfs"
+      FS="btrfs"
    fi
    echo "-t $FS"
 }
@@ -544,16 +544,27 @@ union_append_bundles()
     done  
    # Alsy Bundle  
    for BUNDLE in $( ls -1 "$BASEPATH"| sort -n | grep '[.]'$BAEXT'$' ) 
-    do               
+    do
       #echo "* $BUNDLE"
       BUN="$(basename "$BUNDLE")"
-      if [ "$DBGINF_IS_ENABLED" ]; then
-       echo "* $BUN"
-      fi 
-      BUN="${BUN%.*}"
-      mkdir -p "$2/$BUN"
-      mount -o loop -t squashfs "$BASEPATH/$BUNDLE" "$2/$BUN"
-      mount -o remount,add:1:"$2/$BUN" aufs "$3"
+      enable_bun=1
+      if [ -f "$BASEPATH/black.lst" ]; then
+        for cmd in $( cat $BASEPATH/black.lst )
+          do
+            if [ "$(ls -1 $BASEPATH | grep $cmd)" = "$BUN" ]; then
+              enable_bun=0
+            fi
+          done
+      fi
+      if [ "$enable_bun" == "1" ]; then
+        if [ "$DBGINF_IS_ENABLED" ]; then
+          echo "* $BUN"
+        fi 
+        BUN="${BUN%.*}"
+        mkdir -p "$2/$BUN"
+        mount -o loop -t squashfs "$BASEPATH/$BUNDLE" "$2/$BUN"
+        mount -o remount,add:1:"$2/$BUN" aufs "$3"
+      fi
     done  
 # << 2017-08-02 Sevastyanov S.V.    
 #   echo_green_star
@@ -591,7 +602,7 @@ fstab_create()
 change_root()
 {
    debug_log "change_root" "$*"
-   init_swap
+   #init_swap
    umount /proc
    umount /sys
 
