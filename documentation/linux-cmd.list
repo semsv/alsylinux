@@ -54,4 +54,4 @@ b.) по содержимому файлов ( помимо наличия, ср
 
 15. Работа с пользователем
    а) usermod -g netdev alesya
-   б) sudo usermod -a -g netdev alesya
+   б) usermod -a -G netdev alesya
