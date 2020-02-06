@@ -55,3 +55,10 @@ b.) по содержимому файлов ( помимо наличия, ср
 15. Работа с пользователем
    а) usermod -g netdev alesya
    б) usermod -a -G netdev alesya
+   
+16. Работа с polkit
+
+-- Посмотреть какие правила (action-id) есть
+     pkaction
+-- Проверка правил 
+     pkcheck --action-id org.freedesktop.NetworkManager.network-control --allow-user-interaction --process $(pidof -s bash)
