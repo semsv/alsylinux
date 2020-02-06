@@ -62,3 +62,8 @@ b.) по содержимому файлов ( помимо наличия, ср
      pkaction
 -- Проверка правил 
      pkcheck --action-id org.freedesktop.NetworkManager.network-control --allow-user-interaction --process $(pidof -s bash)
+     
+17. Настройка WI-FI
+
+-- Посмотреть список доступных сетей
+  iwlist scanning
