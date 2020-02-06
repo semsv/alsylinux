@@ -67,3 +67,5 @@ b.) по содержимому файлов ( помимо наличия, ср
 
 -- Посмотреть список доступных сетей
   iwlist scanning
+-- Настройка соединения через nmcli
+  nmcli dev wifi connect <SSID> password <password>
