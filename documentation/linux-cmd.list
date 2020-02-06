@@ -51,3 +51,7 @@ b.) по содержимому файлов ( помимо наличия, ср
   Примеры установки доп модулей для питона:
     pip install pycups
     pip install virtualenv
+
+15. Работа с пользователем
+   а) usermod -g netdev alesya
+   б) sudo usermod -a -g netdev alesya
