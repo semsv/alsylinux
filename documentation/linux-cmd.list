@@ -51,6 +51,8 @@ b.) по содержимому файлов ( помимо наличия, ср
   Примеры установки доп модулей для питона:
     pip install pycups
     pip install virtualenv
+    
+    sudo -H pip3 install --upgrade gmusicapi soundcloud youtube-dl pafy pycountry titlecase pychromecast plexapi fuzzywuzzy eventlet python-Levenshtein && sudo -H pip3 install git+https://github.com/plamere/spotipy.git --upgrade
 
 15. Работа с пользователем
    а) usermod -g netdev alesya
