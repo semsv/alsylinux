@@ -7,10 +7,10 @@
 3. Узнать версию gcc
   gcc --version
 
-4. Узнать версию OpenGL
+4. Узнать версию OpenGL, Mesa
   glxinfo | grep version
 
-5. Узнать версию Mesa
+5. Узнать версию GLEW, OpenGL, Mesa
   glewinfo | grep version
   
 6. Создание образа жесткого диска
