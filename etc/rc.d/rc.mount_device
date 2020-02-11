@@ -1,4 +1,8 @@
 #!/bin/sh
+SWAP="alsy-tmp.swap"
+SWAP2="alsy-tmp2.swap"
+STEAM="Steam.vhd"
+HOME="home_old.vhd"
 
 mount_device() {
 
@@ -7,7 +11,14 @@ declare -i inum
 inum=0
 lnum=0
 
-echo "0" > /tmp/~ismounthome~.alsy.tmp
+declare is_mount_home="0"
+export is_mount_home
+
+declare is_mount_steam="0"
+export is_mount_steam
+
+declare is_mount_swap="0"
+export is_mount_swap
 
 for ((lnum=1;lnum<=2;lnum++))
 do
@@ -15,9 +26,10 @@ do
 blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE; do
   let inum=inum+1
   MNTPOINT=/media/vhdd$inum
-  SWAPFILE=$MNTPOINT/alsy-tmp.swap
-  STEAMFILE=$MNTPOINT/Steam.vhd
-  HOMEFILE=$MNTPOINT/home.vhd
+  SWAPFILE=$MNTPOINT/$SWAP
+  SWAPFILE2=$MNTPOINT/$SWAP2
+  STEAMFILE=$MNTPOINT/$STEAM
+  HOMEFILE=$MNTPOINT/$HOME
   
   mkdir -p $MNTPOINT
   if [ "$(mount -l | grep $MNTPOINT | grep $DEVICE)" == "" ]; then
@@ -27,42 +39,53 @@ blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE;
   else
     a=1
   fi
-  ismounthome="$(cat /tmp/~ismounthome~.alsy.tmp)"
 # Монтируем устройство для Steam "/home/alesya/.local/share/Steam"
   if [ -f $STEAMFILE ]; then
-    echo "STEAM1"
-    echo "$ismounthome"
-  if [ $ismounthome = "1" ]; then
+  if [ "$(mount -l | grep "on /home type")" != "" ]; then
     if [ ! -d /home/alesya/.local/share/Steam ]; then
       mkdir -p /home/alesya/.local/share/Steam
     fi
-    if [ "$(mount -l | grep $MNTPOINT | grep $STEAMFILE)" == "" ]; then
+    if [ "$(mount -l | grep "/home/alesya/.local/share/Steam")" == "" ]; then
       mount $STEAMFILE /home/alesya/.local/share/Steam
       if [ $? -eq 0 ]; then
-        a="1"
+        is_mount_steam="1"
+        export is_mount_steam
       fi
     fi
   fi
   fi
-# Монтируем устройство для домашней директории "/home"
+  # Монтируем устройство для домашней директории "/home"
   if [ -f $HOMEFILE ]; then
-    if [ "$(mount -l | grep /home | grep home.vhd)" == "" ]; then
+    if [ "$(mount -l | grep "on /home type")" == "" ]; then
       mount $HOMEFILE /home
       if [ $? -eq 0 ]; then
-        a="1"
-        echo "1" > /tmp/~ismounthome~.alsy.tmp
+        is_mount_home="1"
+        value_="$(mount -l | grep 'on /home type' | cut -d ' ' -f 1)"
+        if [ "$(echo $value_ | grep '/media')" != "" ]; then
+          fsck -y $value_
+          sleep 1
+        fi
       fi
     else
-      echo "1" > /tmp/~ismounthome~.alsy.tmp
+      is_mount_home="1"
     fi
   fi
 # Подключаем SWAP FILE если он есть
   if [ -f $SWAPFILE ]; then
   if [ "$(swapon -s)" == "" ]; then
     mkswap -L "alsy swap file" $SWAPFILE
-    swapon -p 32767 $SWAPFILE
+    swapon -p 0 $SWAPFILE
     if [ $? -eq 0 ]; then
-      a="1"
+      is_mount_swap="1"
+    fi
+  fi
+  fi
+  if [ -f $SWAPFILE2 ]; then
+  if [ "$(swapon -s | grep swap | wc -l)" = "1" ]; then
+    mkswap -L "alsy swap file two" $SWAPFILE2
+    swapon -p 1 $SWAPFILE2
+    if [ $? -eq 0 ]; then
+      is_mount_swap="1"
     fi
   fi
   fi
@@ -73,4 +96,97 @@ blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE;
   fi
 done
 done
+
+#echo "is_mount_home=$is_mount_home"
+#echo "is_mount_steam=$is_mount_steam"
+#echo "is_mount_swap=$is_mount_swap"
+
 }
+
+umount_device() {
+  spwd="$(pwd)"
+  cd /media
+  swapoff -a
+  sleep 1
+  if [ "$(mount -l | grep "/home/alesya/.local/share/Steam")" != "" ]; then
+    value_="$(mount -l | grep '/home/alesya/.local/share/Steam' | cut -d ' ' -f 1)"
+    if [ "$(echo $value_ | grep '/media')" != "" ]; then
+      fsck -y $value_
+      sleep 1
+    fi
+    umount /home/alesya/.local/share/Steam
+    sleep 1
+    if [ "$(mount -l | grep "/home/alesya/.local/share/Steam")" != "" ]; then
+      umount -f /home/alesya/.local/share/Steam
+      sleep 1
+    fi
+  fi
+  if [ "$(mount -l | grep "on /home type")" != "" ]; then
+    value_="$(mount -l | grep 'on /home type' | cut -d ' ' -f 1)"
+    if [ "$(echo $value_ | grep '/media')" != "" ]; then
+      fsck -y $value_
+      sleep 1
+    fi
+    umount /home >/dev/null 2>/dev/null
+    sleep 1
+    if [ "$(mount -l | grep "on /home type")" != "" ]; then
+      umount -f /home >/dev/null 2>/dev/null
+      sleep 1
+      if [ "$(mount -l | grep "on /home type")" != "" ]; then
+        umount -f /home >/dev/null 2>/dev/null
+        sleep 1
+        if [ "$(mount -l | grep "on /home type")" != "" ]; then
+          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f1 | grep -E '^[0-9]' )
+          do
+#            echo $(ps -x | grep $xproc)
+            kill -n 1 $xproc
+          done
+          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f2 | grep -E '^[0-9]' )
+          do
+#            echo $(ps -x | grep $xproc)
+            kill -n 1 $xproc
+          done
+        fi
+        umount -f /home >/dev/null 2>/dev/null
+        sleep 1
+        if [ "$(mount -l | grep "on /home type")" != "" ]; then
+          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f1 | grep -E '^[0-9]' )
+          do
+#            echo $(ps -x | grep $xproc)
+            kill -n 15 $xproc
+          done
+          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f2 | grep -E '^[0-9]' )
+          do
+#            echo $(ps -x | grep $xproc)
+            kill -n 15 $xproc
+          done
+          sleep 1
+          echo -n "umount /home ..."
+          for second in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20;
+          do
+            if [ "$(mount -l | grep "on /home type")" != "" ]; then
+              umount -f /home > /dev/null 2>/dev/null
+              sleep 1
+            fi
+            echo -n "."
+          done
+        fi
+      fi
+    fi
+    if [ "$(mount -l | grep "on /home type")" != "" ]; then
+      echo -e "\e[31m [ FAIL ] \e[00m"
+    else
+      echo -e "\e[32m [ OK ] \e[00m"
+    fi
+    sleep 1
+  fi
+  cd $spwd
+}
+
+if [ "$1" == "start" ]; then
+  mount_device
+elif [ "$1" == "stop" ]; then
+  umount_device
+else
+  echo "usage: $0 start"
+fi
