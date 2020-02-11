@@ -64,6 +64,8 @@ blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE;
         if [ "$(echo $value_ | grep '/media')" != "" ]; then
           fsck -y $value_
           sleep 1
+          rm -rd /home/alesya/.config
+          rm -rd /home/alesya/.cache
         fi
       fi
     else
@@ -129,50 +131,15 @@ umount_device() {
     fi
     umount /home >/dev/null 2>/dev/null
     sleep 1
-    if [ "$(mount -l | grep "on /home type")" != "" ]; then
-      umount -f /home >/dev/null 2>/dev/null
-      sleep 1
-      if [ "$(mount -l | grep "on /home type")" != "" ]; then
-        umount -f /home >/dev/null 2>/dev/null
-        sleep 1
+    echo -n "umount /home ..."
+    for second in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60;
+    do
         if [ "$(mount -l | grep "on /home type")" != "" ]; then
-          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f1 | grep -E '^[0-9]' )
-          do
-#            echo $(ps -x | grep $xproc)
-            kill -n 1 $xproc
-          done
-          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f2 | grep -E '^[0-9]' )
-          do
-#            echo $(ps -x | grep $xproc)
-            kill -n 1 $xproc
-          done
-        fi
-        umount -f /home >/dev/null 2>/dev/null
-        sleep 1
-        if [ "$(mount -l | grep "on /home type")" != "" ]; then
-          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f1 | grep -E '^[0-9]' )
-          do
-#            echo $(ps -x | grep $xproc)
-            kill -n 15 $xproc
-          done
-          for xproc in $( ps -x | grep -E -v 'loop|/etc/rc.d/rc.' | cut -d" " -f2 | grep -E '^[0-9]' )
-          do
-#            echo $(ps -x | grep $xproc)
-            kill -n 15 $xproc
-          done
+          umount -f /home > /dev/null 2>/dev/null
           sleep 1
-          echo -n "umount /home ..."
-          for second in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20;
-          do
-            if [ "$(mount -l | grep "on /home type")" != "" ]; then
-              umount -f /home > /dev/null 2>/dev/null
-              sleep 1
-            fi
-            echo -n "."
-          done
         fi
-      fi
-    fi
+        echo -n "."
+    done
     if [ "$(mount -l | grep "on /home type")" != "" ]; then
       echo -e "\e[31m [ FAIL ] \e[00m"
     else
