@@ -10,8 +10,12 @@
 logdir="/tmp/alsy-start-log"
 mkdir -p "$logdir"
 
+if ! [ -d /media/cdrom ]; then
+  mkdir -p /media/cdrom
+fi
+
 if [ -x /etc/rc.d/rc.M ]; then
- sh /etc/rc.d/rc.M
+ sh /etc/rc.d/rc.M > $logdir/rc.M.log 2> $logdir/rc.M_err.log
 fi
 
 # Настройка doc book xml
@@ -28,7 +32,7 @@ fi
 
 # Настройка ConsoleKit
 if [ -x /etc/rc.d/rc.consolekit ]; then
-  sh /etc/rc.d/rc.consolekit start >$logdir/rc.ConsoleKit.log 2>$logdir/rc.ConsoleKit_err.log
+  sh /etc/rc.d/rc.consolekit start >$logdir/rc.consolekit.log 2>$logdir/rc.consolekit_err.log
 fi
 
 #Проверим сначала что папка есть
@@ -49,23 +53,15 @@ if [ "$(ls -1 /mnt/live/memory/bundles | grep "glib-2.61.1" 2>/dev/null)" != "" 
 fi
 
 # Для каталога /root подкл вирт диск
-if [ "$(ls -l /mnt/live/memory/data | grep "root.vhd" 2>/dev/null)" != "" ]; then
-  mount -t ext3 /mnt/live/memory/data/root.vhd /root
-fi
+#if [ "$(ls -l /mnt/live/memory/data | grep "root.vhd" 2>/dev/null)" != "" ]; then
+#  mount -t ext3 /mnt/live/memory/data/root.vhd /root
+#fi
 
 # Настройки файла подкачки
-if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; then
-  SWAPFILE="/mnt/live/memory/data/tmp.swap"
-  if [ "$(swapon -s)" == "" ]; then
-    mkswap -L "alsy swap file" $SWAPFILE 2>/dev/null
-    swapon -p 32767 $SWAPFILE 2>/dev/null
-    if [ $? -eq 0 ]; then
-      a="1"
-    fi
-  fi  
+#if [ "$(ls -l /mnt/live/memory/data | grep "tmp.swap" 2>/dev/null)" != "" ]; then
 #  mkswap /mnt/live/memory/data/tmp.swap
 #  swapon /mnt/live/memory/data/tmp.swap -p 32767
-fi
+#fi
 
 # Настройки ядра
 if [ -x /etc/rc.sysctl ]; then
@@ -125,18 +121,27 @@ fi
 
 # Настройка SSHD
 if [ -x /etc/rc.d/rc.sshd ]; then
-  sh /etc/rc.d/rc.sshd sshd_start >$logdir/rc.sshd.log 2>$logdir/rc.sshd_err.log
+  sh /etc/rc.d/rc.sshd start >$logdir/rc.sshd.log 2>$logdir/rc.sshd_err.log
   echo -e "SSHD START................................................\e[32m[OK]\e[0m"
 fi
 
 # Монтируем устройства
-. /etc/rc.d/rc.mount_device
-mount_device > $logdir/rc.mount_device.log 2> $logdir/rc.mount_device_err.log
-echo -e "MOUNT DEVICES................................................\e[32m[OK]\e[0m"
+if [ -x /etc/rc.d/rc.mount_device ]; then
+ sh /etc/rc.d/rc.mount_device start > $logdir/rc.mount_device.log 2> $logdir/rc.mount_device_err.log
+ echo -e "MOUNT DEVICES................................................\e[32m[OK]\e[0m"
+fi
+
+if [ -x /etc/rc.d/rc.export_profile ]; then
+  sh /etc/rc.d/rc.export_profile start >/dev/null
+  echo -e "EXPORT PROFILE ..........................................\e[32m[OK]\e[0m"
+fi
 
 # Load ALSA (sound) defaults:
 if [ -x /etc/rc.d/rc.alsa ]; then
   sh /etc/rc.d/rc.alsa start >/dev/null
 fi
 
-chmod 0 /etc/rc.d/rc.local
+if [ -x /etc/rc.d/rc.local ]; then
+  sh /etc/rc.d/rc.local start >/dev/null
+  chmod 0 /etc/rc.d/rc.local
+fi
