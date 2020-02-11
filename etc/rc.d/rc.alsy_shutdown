@@ -1,0 +1,20 @@
+# Размонтируем устройства
+
+stop() {
+  if [ -x /etc/rc.d/rc.mount_device ]; then
+    sh /etc/rc.d/rc.mount_device stop
+    echo -e "UMOUNT DEVICES................................................\e[32m[OK]\e[0m"
+  fi
+}
+
+start() {
+ stop
+}
+
+if [ "$1" == "shutdown" ]; then
+  stop
+elif [ "$1" == "stop" ]; then
+  stop
+else
+  stop
+fi
