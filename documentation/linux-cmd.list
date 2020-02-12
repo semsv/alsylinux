@@ -71,3 +71,6 @@ b.) по содержимому файлов ( помимо наличия, ср
   iwlist scanning
 -- Настройка соединения через nmcli
   nmcli dev wifi connect <SSID> password <password>
+
+18. Проверить запущен ли процесс
+  ps -x | grep steam
