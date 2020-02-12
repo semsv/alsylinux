@@ -12,8 +12,8 @@ countprocess2=$( echo $cmdfindprocess2 | wc -l )
 
 SIGHUP()
 {
-  echo $countprocess1
-  echo $countprocess2
+#  echo $countprocess1
+#  echo $countprocess2
   for xproc in $cmdfindprocess1
   do
     if [ "$xproc" != "" ]; then
