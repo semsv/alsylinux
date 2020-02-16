@@ -1,0 +1,13 @@
+#!/bin/sh
+logdir="/tmp/alsy-start-log"
+mkdir -p "$logdir"
+filelogname="$(basename $0)"
+
+if [ "$1" == "stop" ]; then
+  if [ -x /etc/rc.d/rc.wicd -a -x /usr/sbin/wicd ]; then
+    . /etc/rc.d/rc.wicd stop >$logdir/$filelogname".log" 2>$logdir/$filelogname"_err.log"
+  elif [ -x /etc/rc.d/rc.networkmanager ]; then
+    . /etc/rc.d/rc.networkmanager stop >$logdir/$filelogname".log" 2>$logdir/$filelogname"_err.log"
+  fi
+  echo -e "NETWORK MANAGER STOP................................................\e[32m[OK]\e[0m"
+fi
