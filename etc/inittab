@@ -10,15 +10,15 @@
 #
 # Author:	Miquel van Smoorenburg, <miquels@drinkel.nl.mugnet.org>
 # Modified by:	Patrick J. Volkerding, <volkerdi@slackware.com>
-# Modified by:	Sevastyanov S.V. semen_s84@mail.ru
+# Modified by:	Sevastyanov S.V. <semen_s84@mail.ru>
 
 # These are the default runlevels in Slackware:
 #   0 = halt
 #   1 = single user mode
 #   2 = unused (but configured the same as runlevel 3)
 #   3 = multiuser mode (default Slackware runlevel)
-#   4 = X11 with KDM/GDM/XDM (session managers)
-#   5 = unused (but configured the same as runlevel 3)
+#   4 = unused (but configured the same as runlevel 3)
+#   5 = X11 with KDM/GDM/XDM (session managers)
 #   6 = reboot
 
 # Default runlevel. (Do not set to 0 or 6)
@@ -31,7 +31,6 @@ si:S:sysinit:/etc/rc.d/rc.S
 su:1S:wait:/etc/rc.d/rc.K
 
 # Script to run when going multi user.
-#rc:2345:wait:/etc/rc.d/rc.M
 rc:2345:wait:/etc/rc.d/rc.alsy.init
 
 # What to do at the "Three Finger Salute".
@@ -65,10 +64,9 @@ c6:12345:respawn:/sbin/agetty 38400 tty6 linux
 #d1:12345:respawn:/sbin/agetty -mt60 38400,19200,9600,2400,1200 ttyS0 vt100
 #d2:12345:respawn:/sbin/agetty -mt60 38400,19200,9600,2400,1200 ttyS1 vt100
 
-# Runlevel 4 also starts /etc/rc.d/rc.4 to run a display manager for X.
+# Runlevel 5 also starts /etc/rc.d/rc.5 to run a display manager for X.
 # Display managers are preferred in this order:  gdm, kdm, xdm
-#x2:4:respawn:/etc/rc.d/rc.M
-x1:4:respawn:/etc/rc.d/rc.4
+x1:5:respawn:/etc/rc.d/rc.5
 
 
 # End of /etc/inittab
