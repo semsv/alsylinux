@@ -2,7 +2,7 @@
 glibpref="$1"
 if [ -d "$glibpref" ]; then
   mkdir -pv $glibpref/usr/lib64/locale
-  make localedata/install-locales
+  cd $2 && make localedata/install-locales
 fi
 #localedef -i POSIX -f UTF-8 C.UTF-8 2> /dev/null || true
 #localedef -i cs_CZ -f UTF-8 cs_CZ.UTF-8

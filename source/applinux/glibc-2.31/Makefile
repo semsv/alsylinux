@@ -11,7 +11,7 @@ install:
 	touch ${pref}/etc/ld.so.conf
 	cd ${makefiledir} && make -f Makefile install
 	cp -rLd ${pref}/lib64 ${pref}/lib
-#install_locale ${pref}
+	install_locale ${pref} ${makefiledir}
 	rm -rd ${sourcedir}
 clean:
 	rm -rd ${sourcedir}
