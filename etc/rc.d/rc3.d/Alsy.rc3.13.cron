@@ -1,0 +1,12 @@
+#!/bin/sh
+# Start crond (Dillon's crond):
+# If you want cron to actually log activity to /var/log/cron, then change
+# -l notice to -l info to increase the logging level.
+if [ "$1" = "start" ]; then
+  if [ -x /usr/sbin/crond ]; then
+    /usr/sbin/crond -l notice &
+  fi
+  if [ -f /etc/crontabnewfile ]; then
+    crontab /etc/crontabnewfile
+  fi
+fi
