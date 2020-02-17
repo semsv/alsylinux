@@ -2,6 +2,9 @@
 
 В нее добавляем все файлы отсюда плюс файл glibc-2.31.tar.gz
 
+https://ftp.gnu.org/gnu/glibc/glibc-2.31.tar.gz
+
+
 Выполняем команды:
 
 1. config.sh
