@@ -49,13 +49,15 @@ mkdir -p $dirsave/var/tmp
 mkdir -p $dirsave/tmp
 mkdir -p $dirsave/usr/share/apps/kdm
 
-if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
-  mkdir -p $dirsave/home/$user
-  cp -rLd /home/$user $dirsave/home
-  cp -rLd /home/$user/.kde $dirsave/home/$user
-  cp -rLd /home/$user/.config $dirsave/home/$user
-  cp -rLd /home/$user/.local $dirsave/home/$user
-  chown -R $user:$user $dirsave/home/$user
+if [ -d /home/$user ]; then
+  if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
+    mkdir -p $dirsave/home/$user
+    cp -rLd /home/$user $dirsave/home
+    cp -rLd /home/$user/.kde $dirsave/home/$user
+    cp -rLd /home/$user/.config $dirsave/home/$user
+    cp -rLd /home/$user/.local $dirsave/home/$user
+    chown -R $user:$user $dirsave/home/$user
+  fi
 fi
 
 cp -rLd /root/.kde $dirsave/root
