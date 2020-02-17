@@ -13,7 +13,7 @@ command_name="save-kde"
 dirsave="$1"
 modulename="$2"
 option_p1="$3"
-user="alesya"
+user="$(logname)"
 
 if [ "$dirsave" == "" ]; then
   dirsave="/usr/src/kde"
