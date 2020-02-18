@@ -1,19 +1,20 @@
 #/bin/sh
-##################################################
-##  Скрипт сохранения настроек KDE              ##
-##  Автор:  Севастьянов Семен                   ##
-##  Дата:   2019 01 июнь                        ##               
-##  Версия: 1.0.1                               ##  
-##  Дата последней коррекции: 2019-28-июля(07)  ##
-##################################################
+####################################################
+##  Скрипт сохранения настроек KDE                ##
+##  Автор:  Севастьянов Семен                     ##
+##  Дата:   2019 01 июнь                          ##               
+##  Версия: 1.0.2                                 ##  
+##  Дата последней коррекции: 2020-17-февраля(02) ##
+####################################################
 # В версии 1.0.1 положено начало для сохранения помимо настроек root пользователя, 
 # сохранения настроек дополнительного пользователя и его домашней папки
+# В версии 1.0.2 доработана идея сохранения настроек пользователя не root
 
 command_name="save-kde"
 dirsave="$1"
 modulename="$2"
 option_p1="$3"
-user="alesya"
+user="$(logname)"
 
 if [ "$dirsave" == "" ]; then
   dirsave="/usr/src/kde"
@@ -49,13 +50,15 @@ mkdir -p $dirsave/var/tmp
 mkdir -p $dirsave/tmp
 mkdir -p $dirsave/usr/share/apps/kdm
 
-if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
-  mkdir -p $dirsave/home/$user
-  cp -rLd /home/$user $dirsave/home
-  cp -rLd /home/$user/.kde $dirsave/home/$user
-  cp -rLd /home/$user/.config $dirsave/home/$user
-  cp -rLd /home/$user/.local $dirsave/home/$user
-  chown -R $user:$user $dirsave/home/$user
+if [ -d /home/$user ]; then
+  if [ "$(ls -1a /home/$user/ | grep ".kde" 2>/dev/null)" != "" ]; then
+    mkdir -p $dirsave/home/$user
+    cp -rLd /home/$user $dirsave/home
+    cp -rLd /home/$user/.kde $dirsave/home/$user
+    cp -rLd /home/$user/.config $dirsave/home/$user
+    cp -rLd /home/$user/.local $dirsave/home/$user
+    chown -R $user:$user $dirsave/home/$user
+  fi
 fi
 
 cp -rLd /root/.kde $dirsave/root

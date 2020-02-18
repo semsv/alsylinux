@@ -1,22 +1,22 @@
-﻿#!/bin/sh
+#!/bin/sh
 ############################################################################################################
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.8                                                                                      ###
-###   Дата последнего изменения: 04 сентября 2019 16:26 среда                                            ###
+###   Версия: 1.0.9                                                                                      ###
+###   Дата последнего изменения: 05 февраля 2020 01:12 среда                                             ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
-###               3. Открываем консоль                                                                   ### 
+###               3. Открываем консоль                                                                   ###
 ###               4. Выполняем команду: setup /usr/src/readline-7.0 0030                                 ###
-###               5. Все готово! Теперь в директории "/usr/src",                                         ### 
+###               5. Все готово! Теперь в директории "/usr/src",                                         ###
 ###                  у нас лежит файл 0030-ALSY.readline-7.0.ab                                          ###
 ###                  и данный файл скопирован на флешку, после перезагрузки программа будет доступна     ###
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.8
+version=1.0.9
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -26,7 +26,8 @@ version=1.0.8
 # В версии 1.0.6 начата работа по созданию символьных ссылок при сборке программы, фактически развитие идеи версии 1.0.3, а также вывод инф о использовании программы и версии
 # В версии 1.0.7 добавлены две новые опции
 # В версии 1.0.8 добавлена новая опция
-copyflag="0" 
+# В версии 1.0.9 исправлены мелкие баги
+copyflag="0"
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
 AppName="$(basename "$1")"                                 # Только имя файла без пути
@@ -34,7 +35,7 @@ fi
 NumberAlsyBundleFile="$2"                                  # Номер файла Alsy Bundle
 Options="$3"                                               # Опции для setup
 AppPrefix="/usr/src/tools"                                 # Где в итоге будет программа !!! Внимание! Не меняйте данную директорию на системную, типа "/", "/lib64", "/usr" и т.д.
-AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий конфигурации 
+AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий конфигурации
 ConfigureFile="configure"
 CurrDir="$(pwd)"
 
@@ -54,15 +55,15 @@ for DIR__ in $( ls -l -R "$CRT_LINK_PATH" | grep -E ':$' )
  do               
    DIR__="${DIR__%:*}"
    logic_create_dir="1"
-   for FILE__ in $( ls "$DIR__/" ) 
+   for FILE__ in $( ls "$DIR__/" )
      do
        if [ "$(ls -1 "$DIR__/$FILE__" | wc -l)" == "1" ]; then
          if [ "$(basename "$(ls -1 $DIR__/$FILE__)")" == "$FILE__" ]; then
            leng_str1="$(expr length $CRT_LINK_PATH)"
            leng_str2="$(expr length $DIR__/$FILE__)"
-                     
+
            let cpl=leng_str2-leng_str1
-           let pos=leng_str2-cpl                     
+           let pos=leng_str2-cpl
            
            fls="$DIR__/$FILE__"
            res_str=${fls:$pos:$cpl}
@@ -81,7 +82,7 @@ logic_create_dir="0"
            l1="$(expr length $rlfile)"
            l2="$(expr length $rlpath)"
            let cpl=l2-l1
-           rlpath=${rlpath:0:cpl}           
+           rlpath=${rlpath:0:cpl}
            echo "mkdir -p $rlpath" >> "$SCRIPT_FILE"
 fi
            echo "ln -s $res_str" "$2/$res_str2" >> "$SCRIPT_FILE"
@@ -160,6 +161,7 @@ if [ "$(echo "$check_path")" != '/' ];
 then
   AppFullName=$CurrDir/"$AppFullName"
   echo $AppFullName
+  if [ ! -d "$AppFullName" ]; then
   if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.xz"$" )" != "" ];
   then
 
@@ -174,9 +176,9 @@ then
    echo $result_str
    
    length_str1="$(expr length $RAR_NAME)"
-   length_str2="$(expr length $AppFullName)"     
-   let copylen=length_str2-length_str1   
-   result_str2=${AppFullName:0:$copylen}   
+   length_str2="$(expr length $AppFullName)"
+   let copylen=length_str2-length_str1
+   result_str2=${AppFullName:0:$copylen}
    
    AppFullName="$result_str2"$result_str
    echo $AppFullName
@@ -198,16 +200,16 @@ then
    echo $result_str
    
    length_str1="$(expr length $RAR_NAME)"
-   length_str2="$(expr length $AppFullName)"     
-   let copylen=length_str2-length_str1   
-   result_str2=${AppFullName:0:$copylen}   
+   length_str2="$(expr length $AppFullName)"
+   let copylen=length_str2-length_str1
+   result_str2=${AppFullName:0:$copylen}
    
    AppFullName="$result_str2"$result_str
    echo $AppFullName
    
    tar -xf "$result_str2"$RAR_NAME
    cp -r "$result_str2"$RAR_NAME $AppFullName
-  fi  
+  fi
   if [ "$(ls -l "$AppFullName" | grep --regexp=.tar.gz"$" )" != "" ];
   then
 
@@ -223,14 +225,15 @@ then
    
    length_str1="$(expr length $RAR_NAME)"
    length_str2="$(expr length $AppFullName)"     
-   let copylen=length_str2-length_str1   
-   result_str2=${AppFullName:0:$copylen}   
+   let copylen=length_str2-length_str1
+   result_str2=${AppFullName:0:$copylen}
    
    AppFullName="$result_str2"$result_str
    echo $AppFullName
    
    tar -xf "$result_str2"$RAR_NAME
    cp -r "$result_str2"$RAR_NAME $AppFullName
+  fi
   fi
 fi
 #Конец:
@@ -295,7 +298,7 @@ fi
 
 if [[ "$Options" != "-n"  && "$Options" != "-i" && "$Options" != "-m" ]]; then
   #Проверяем наличие Makefile, если есть ничего страшного, просто подчистим старые настройки и удалим его
-  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then 
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" != "" ]; then
     make clean >>$AppFullName/setup_all.log 2>/dev/null
 #FIX BUG:1 BEGIN
 #  Столкнулся с такой ситуацией, что конфигурационного файла вообще нет, а есть только MakeFile,
@@ -335,13 +338,13 @@ if [[ "$Options" != "-n" && "$Options" != "-i" && "$Options" != "-m" ]]; then
 
   #FIX BUG:1 BEGIN
   #Проверяем наличие Makefile
-  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
-    cp -r $AppFullName/.Makefile.alsycpmake Makefile
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then
+    cp -r $AppFullName/.Makefile.alsycpmake Makefile 2>/dev/null
   fi
   #FIX BUG:1 END
 
   #Проверяем наличие Makefile
-  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then 
+  if [ "$(ls -1 | grep --regexp=Makefile"$" 2>/dev/null)" == "" ]; then
     echo "$(less ALSYBUILDPATH)"
     ALSYBUILDPATH="$(less ALSYBUILDPATH)"
     if [ "$ALSYBUILDPATH" == "" ]; then
@@ -349,7 +352,7 @@ if [[ "$Options" != "-n" && "$Options" != "-i" && "$Options" != "-m" ]]; then
       exit
     else
       cd "$ALSYBUILDPATH"
-    fi 
+    fi
   fi
 fi
 
@@ -375,12 +378,12 @@ if [ "$Options" != "-i" ]; then
     else
       echo "Error: Compilation finished with error! Look setup_compile_err.log for more info!"
       exit
-    fi  
+    fi
   fi
 fi
 
 #Перед установкой очищаем от предыдущих установок
-if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" != "" ]; then 
+if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" != "" ]; then
 rm -rd $AppPrefix/$AppName
 fi
 
@@ -398,7 +401,7 @@ else
 fi
 
 #Если все хорошо то у нас появляется директория $AppPrefix/$AppName, проверим это:
-if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" == "" ]; then 
+if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" == "" ]; then
    echo "Error: Compilation finished with error! Look *.log files for more info!"
    exit
 fi
@@ -407,10 +410,10 @@ fi
 if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error 2>/dev/null)" != "" ]; then
   if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
     echo "Error ignored!"
-  else  
+  else
     echo "Error: Installation finished with error! Look setup_install_err.log for more info!"
     exit
-  fi  
+  fi
 fi
 
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
@@ -447,7 +450,7 @@ if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib 2>/dev/null)" != "" ];
  #Проверим сначала что такой папки еще нет
  if [ "$(ls -1 .new_install/$AppPrefix/$AppName | grep lib64 2>/dev/null)" == "" ]; then
    cp -r .new_install/$AppPrefix/$AppName/lib .new_install/$AppPrefix/$AppName/lib64
- fi  
+ fi
 fi
 
 #Теперь копируем содержимое папки программы в "корень"^1 и в "/usr"^2 и в "/usr/local"
