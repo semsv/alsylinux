@@ -1,26 +1,27 @@
-   glibpref="/usr/src/tools/glibc-2.31"
+   app=glibc-2.31
+   glibpref="/usr/src/tools/$app"
 
-   if [ -d glibc-2.31_src ]; then
-     sudo rm -rd glibc-2.31_src
+   if [ -d "$app"_src ]; then
+     rm -rd "$app"_src
    fi
-   mkdir -p glibc-2.31_src
-   sudo tar -xf glibc-2.31.tar.gz -C glibc-2.31_src/
+   mkdir -p "$app"_src
+   tar -xf "$app".tar.gz -C "$app"_src/
 
-   if [ -d glibc-2.31_src/build_ ]; then
-     rm -rd glibc-2.31_src/build_
+   if [ -d "$app"_src/build_ ]; then
+     rm -rd "$app"_src/build_
    fi
 
    CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
-   cd glibc-2.31_src/ &&
+   cd "$app"_src/ &&
    mkdir -p build_ &&
    cd build_ &&
-   ../glibc-2.31/configure --prefix=$glibpref                        \
+         ../$app/configure --prefix=$glibpref                        \
                            --disable-werror                          \
                            --enable-kernel=3.2                       \
                            --enable-multilib                         \
                            --enable-stack-protector=strong           \
                            --with-headers=/usr/include               \
-                           --libexecdir=$glibpref/lib64/glibc-2.31   \
+                           --libexecdir=$glibpref/lib64/$app         \
                            --libdir=$glibpref/lib64                  \
                            libc_cv_slibdir=$glibpref/lib64
 
