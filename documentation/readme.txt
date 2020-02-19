@@ -1,4 +1,4 @@
-1. Скопировать на USB Flash Drive папку alsylin
-2. Для MS Windows запустить файл с флешки alsylin/boot/bootinst.bat
-2. Для Linux выполнить команду ./bootinst.sh /точка монтирования USB FLASH Drive/alsylin/boot/extlinux.exe
-3. Все готово!
+1. РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РЅР° USB Flash Drive РїР°РїРєСѓ alsylinux
+2. Р”Р»СЏ MS Windows Р·Р°РїСѓСЃС‚РёС‚СЊ С„Р°Р№Р» СЃ С„Р»РµС€РєРё alsylinux/boot/bootinst.bat
+2. Р”Р»СЏ Linux РІС‹РїРѕР»РЅРёС‚СЊ РєРѕРјР°РЅРґСѓ ./bootinst.sh /С‚РѕС‡РєР° РјРѕРЅС‚РёСЂРѕРІР°РЅРёСЏ USB FLASH Drive/alsylinux/boot/extlinux.exe
+3. Р’СЃРµ РіРѕС‚РѕРІРѕ!
