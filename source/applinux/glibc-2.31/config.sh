@@ -1,10 +1,10 @@
    app=glibc-2.31
-   glibpref="/usr/src/tools/$app"
    arch="x86-64"
    if [ "$arch" != "x86-64"]; then
      app="$app'-'$arch"
    fi
-
+   glibpref="/usr/src/tools/$app"
+   
    if [ -d "$app"_src ]; then
      rm -rd "$app"_src
    fi
