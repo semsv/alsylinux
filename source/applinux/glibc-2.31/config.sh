@@ -1,7 +1,9 @@
    app=glibc-2.31
    arch="x86-64"
    if [ "$arch" != "x86-64"]; then
-     app="$app'-'$arch"
+     sapp="$app'-'$arch"
+   else
+     sapp="$app"
    fi
    glibpref="/usr/src/tools/$app"
    
