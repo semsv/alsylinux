@@ -289,10 +289,11 @@ deactivate()
    losetup -d "$LOOP" 2>/dev/null
 
    # remove the .ab file, but keep it if deactivate was issued on full ab real path
-#  if [ "$(realpath "$1")" != "$(realpath "$LOOPFILE")" ]; then
-      mkdir -p "$MODULES/deactivate"
-      mv -v "$LOOPFILE" "$MODULES/deactivate/"
-#   fi
+   Q="$(question "Alsy bundle: $SB\n File will be moved to deactivated modules\nMove it now?")"
+   if [ "$Q" = "0" ]; then # yes
+     mkdir -p "$MODULES/deactivate"
+     mv -v "$LOOPFILE" "$MODULES/deactivate/"
+   fi
 
    echo "Alsy Bundle deactivated: $SB"
    if [ "$GUI" ]; then
