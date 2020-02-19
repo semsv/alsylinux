@@ -1,6 +1,7 @@
 #!/bin/make
-pref=/usr/src/tools/glibc-2.31
-sourcedir=glibc-2.31_src
+app=glibc-2.31
+pref=/usr/src/tools/${app}
+sourcedir=${app}_src
 makefiledir=${sourcedir}/build_
 .PHONY: all install clean
 all:
