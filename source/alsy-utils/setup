@@ -3,8 +3,8 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.9                                                                                      ###
-###   Дата последнего изменения: 05 февраля 2020 01:12 среда                                             ###
+###   Версия: 1.0.10                                                                                     ###
+###   Дата последнего изменения: 19 февраля 2020 20:12 среда                                             ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -16,7 +16,7 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.9
+version=1.0.10
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -27,6 +27,7 @@ version=1.0.9
 # В версии 1.0.7 добавлены две новые опции
 # В версии 1.0.8 добавлена новая опция
 # В версии 1.0.9 исправлены мелкие баги
+# В версии 1.0.10 изменен настройки вывода текста подсказок и версии
 copyflag="0"
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
@@ -95,34 +96,34 @@ fi
 
 usage()
 {
- echo -e "\e[36m usage:\e[32m setup\e[0m [\e[23msource_dir\e[0m] [nubmer bundle] [<Options>]"
- echo -e "\e[36m for example:\e[32m setup\e[0m \e[24mreadline-7.0\e[0m 0000"
- echo -e "\e[36m for example:\e[32m setup\e[0m \e[25mreadline-7.0\e[0m 0000 -x"
- echo -e "\e[36m for example:\e[32m setup\e[0m \e[26m/usr/src/alsy-source/readline-7.0\e[0m 0000"
- echo -e "\e[36m for example:\e[32m setup\e[0m \e[27m/usr/src/alsy-source/readline-7.0\e[0m 0000 -x"
- echo -e "\e[36m for get version info, usage:\e[32m setup\e[0m --version"
+ echo -e "\e[1m\e[36m usage:\e[32m setup\e[0m [\e[1msource_dir\e[0m] [\e[1mnumber bundle\e[0m] [\e[1moptions\e[0m]"
+ echo -e "\e[1m\e[36m for example:\e[32m setup\e[0m \e[1mreadline-7.0 0000\e[0m"
+ echo -e "\e[1m\e[36m for example:\e[32m setup\e[0m \e[1mreadline-7.0 0000 -x\e[0m"
+ echo -e "\e[1m\e[36m for example:\e[32m setup\e[0m \e[1m/usr/src/alsy-source/readline-7.0 0000\e[0m"
+ echo -e "\e[1m\e[36m for example:\e[32m setup\e[0m \e[1m/usr/src/alsy-source/readline-7.0 0000 -x\e[0m"
+ echo -e "\e[1m\e[36m for get version info, usage:\e[32m setup\e[37m --version\e[0m"
 }
 
 version()
 {
- echo "$version"
+ echo -e "\e[1m$version\e[00m"
 }
 
 help()
 {
  echo ""
- echo " ###################################################################################"
- echo -e "\e[34m ### \e[0m  setup (version=$version) - compile program from source and build alsy bundle \e[34m###"
- echo -e "\e[31m ###\e[0m#############################################################################\e[31m###\e[00m"
+ echo -e "\e[1m #####################################################################################\e[00m"
+ echo -e "\e[34m  ### \e[0m  setup (version=$version) - compile program from source and build alsy bundle \e[34m###"
+ echo -e "\e[31m   ###\e[1m\e[37m#############################################################################\e[00m\e[31m###\e[00m"
  echo ""
  usage
  echo ""
  echo "Options: "
- echo "  -h,	--help   	display help message and exit"
- echo "  -v,	--version	display version information and exit"
- echo "  -x,	--xconfig	setup with non-standard configure from config.sh file"
- echo "  -n,	--not-configure	execute \"setup\" command without configure file"
- echo "  -i,	--only-install	execute \"setup\" command without configure file and make, only make install"
+ echo "  -h,	--help   		display help message and exit"
+ echo "  -v,	--version		display version information and exit"
+ echo "  -x,	--xconfig		setup with non-standard configure from config.sh file"
+ echo "  -n,	--not-configure		execute \"setup\" command without configure file"
+ echo "  -i,	--only-install		execute \"setup\" command without configure file and make, only make install"
  echo "  -m,	--only-make-prefix	execute \"setup\" command without configure file and compile source as \"make\" and \"make install\" with prefix"
  echo ""
 }
