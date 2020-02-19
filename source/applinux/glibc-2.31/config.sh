@@ -5,7 +5,7 @@
    else
      sapp="$app"
    fi
-   glibpref="/usr/src/tools/$app"
+   glibpref="/usr/src/tools/$sapp"
    
    if [ -d "$app"_src ]; then
      rm -rd "$app"_src
