@@ -1,6 +1,6 @@
 EN: This is the help file for installing the AlsyLinux operating system.
 
-Welcome to AlsyLinux v1.0.3 X86_64
+Welcome to AlsyLinux v1.0.0 X86_64
 
  The boot menu offers several options, toggle them by [Space] key.
  If you need to edit boot command line (for advanced users), hit [Tab].
@@ -15,7 +15,7 @@ Welcome to AlsyLinux v1.0.3 X86_64
 
 RU: Это файл помощи в установке операционной системы AlsyLinux
 
-Добро пожаловать в AlsyLinux v1.0.3 X86_64
+Добро пожаловать в AlsyLinux v1.0.0 X86_64
 
   Меню загрузки предлагает несколько вариантов, переключать их клавишей [Пробел].
   Если вам нужно отредактировать командную строку загрузки (для опытных пользователей), нажмите [Tab].
