@@ -557,23 +557,18 @@ union_append_bundles()
    local BUN
    local BASEPATH      
    
-   BASEPATH="/memory/data/$LIVEKITNAME/images"
-  
-   for BUNDLE in $( ls -1 "$BASEPATH" | grep '[.]'img.gz'$' ) 
-    do
-      
-      BUNDLE="$BASEPATH"/"$BUNDLE"
-   
-      echo "* $BUNDLE"
-      BUN="$(basename "$BUNDLE")"
-      echo "* $BUN"
-   
-      cp -r "$BUNDLE" /lib
-      gunzip /lib/"$BUN"
-      BUN="${BUN%.*}"
-      tar -C /lib -xf /lib/"$BUN"
-   
-   done    
+##   BASEPATH="/memory/data/$LIVEKITNAME/images"  
+##   for BUNDLE in $( ls -1 "$BASEPATH" | grep '[.]'img.gz'$' ) 
+##    do      
+##      BUNDLE="$BASEPATH"/"$BUNDLE"   
+##      echo "* $BUNDLE"
+##      BUN="$(basename "$BUNDLE")"
+##      echo "* $BUN"   
+##      cp -r "$BUNDLE" /lib
+##      gunzip /lib/"$BUN"
+##      BUN="${BUN%.*}"
+##      tar -C /lib -xf /lib/"$BUN"   
+##   done    
    
    BASEPATH="/memory/data/$LIVEKITNAME/modules"
    echo_green_star
