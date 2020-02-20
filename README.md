@@ -5,11 +5,12 @@
 
 Схематично загрузку можно представить так:
   BIOS
-   |
+   ->
   SYSLINUX
-   |
+   ->
   VMLINUZ
   INITRFS.IMG
-   |
-  .INIT
+   ->
+  INIT 0 1 2 3 4 5 6
+  /etc/rc.d
 
