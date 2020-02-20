@@ -6,8 +6,9 @@
 Схематично загрузку ОС можно представить так:
 
 #  BIOS
-  +
+  + select boot loader...
 #  SYSLINUX
+  +  /boot/syslinux.com
   +  /boot/syslinux.cfg    
 # LINUX KERNEL   
   +  /core/VMLINUZ
