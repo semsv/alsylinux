@@ -1,5 +1,11 @@
    app=glibc-2.31
    arch="x86-64"
+   
+   if [ ! -f "$app".tar.gz ]; then
+     filedwnld="https://ftp.gnu.org/gnu/glibc/'$app'.tar.gz"
+     wget $filedwnld -O "$app".tar.gz
+   fi
+   
    if [ "$arch" != "x86-64"]; then
      sapp="$app'-'$arch"
    else
