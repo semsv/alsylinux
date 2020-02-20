@@ -12,6 +12,7 @@
 # ---   copy_rootcopy_content
 # ---   init_devs
 # ---   find_data_try
+# ---   device_bestfs
 # Deleted function:
 # ---   filter_load
 # ---   filter_noload
