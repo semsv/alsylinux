@@ -4,7 +4,8 @@ all:
 	file="images-'$(uname -r)'.tar"
 	tar -zcvf $file lib/modules
 	gzip $file
-	cp -r $file".gz" ../
+	mv $file".gz" ../
+	rm -rd lib/modules/*
 	find | cpio -ov -H newc | xz -f --extreme --check=crc32 > ../initrfs.img
 create:
 	find | cpio -ov -H newc | xz -f --extreme --check=crc32 > ../initrfs.img
