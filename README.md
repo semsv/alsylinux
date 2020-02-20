@@ -29,5 +29,5 @@
    
   ./INIT 3
   +
-  /etc/rc.d/rc.
+  /etc/inittab
 
