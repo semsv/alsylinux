@@ -35,3 +35,11 @@
   +
   /etc/rc.d/rc3.d/A*
 
+# These are the default runlevels in AlsyLinux:
+#   0 = halt
+#   1 = single user mode
+#   2 = unused (but configured the same as runlevel 3)
+#   3 = multiuser mode (default AlsyLinux runlevel)
+#   4 = unused (but configured the same as runlevel 3)
+#   5 = X11 with KDM/GDM/XDM (session managers)
+#   6 = reboot
