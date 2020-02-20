@@ -4,6 +4,15 @@
 # Author: Tomas M. <http://www.linux-live.org>
 #
 # Modified by: Sevastyanov S.
+# New function:
+# ---   find_core_modules_try
+# ---   check_point_mount
+# Modified function:
+# ---   union_append_bundles
+# ---   copy_rootcopy_content
+# Deleted function:
+# ---   filter_load
+# ---   filter_noload
 
 # =================================================================
 # debug and output functions
@@ -127,29 +136,27 @@ alsymnt="alsy.mntpoint"
 # find_core_modules_try                                      #
 ##############################################################
 # $1 = data directory target (mount here)
-# $2 = data directory which contains compressed bundles
+# $2 = data directory which contains compressed images (core modules)
 find_core_modules_try()
 {
-   local DEVICE FS FROM OPTIONS
+   local DEVICE FS IMAGES OPTIONS
    mkdir -p "$1"
-   blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE; do
-      FROM="$2"
+   blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE; do      
       FS="$(device_bestfs "$DEVICE")"
       OPTIONS="$(fs_options $FS)"
       mount -r "$DEVICE" "$1" $FS $OPTIONS 2>/dev/null
-      
-      if [ "$(ls -1 $1/$FROM/images | grep '[.]'img.gz'$')" -ne "" ]; then
-        for BUNDLE in $(ls -1 $1/$FROM/images | grep '[.]'img.gz'$')
+      IMAGES="$2"
+      if [ "$(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')" -ne "" ]; then
+        for BUNDLE in $(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')
         do
-          BUNDLE="$1/$FROM/images"/"$BUNDLE"           
+          BUNDLE="$1/$IMAGES/$BUNDLE"           
           BUN="$(basename "$BUNDLE")"           
           cp -r "$BUNDLE" /lib
           gunzip /lib/"$BUN"
           BUN="${BUN%.*}"
           tar -C /lib -xf /lib/"$BUN"
         done
-      fi
-      
+      fi      
       # unmount twice, since there could be mounted ISO as loop too. If not, it doesn't hurt
       umount "$1" 2>/dev/null
       umount "$1" 2>/dev/null
