@@ -594,7 +594,7 @@ union_append_bundles()
       if [ -f "$BASEPATH/black.lst" ]; then
         for cmd in $( cat $BASEPATH/black.lst )
           do
-            if [ "$(ls -1 $BASEPATH | grep $cmd)" = "$BUN" ]; then
+            if [ "$(ls -1 $BASEPATH/$BUN | grep $cmd)" != "" ]; then
               enable_bun=0
             fi
           done
