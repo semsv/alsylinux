@@ -2,21 +2,22 @@
 
 # Functions library :: for Linux Live Kit scripts
 # Author: Tomas M. <http://www.linux-live.org>
-#
-# Modified by: Sevastyanov S.
-# New function:
-# ---   find_core_modules_try
-# ---   check_point_mount
-# Modified function:
-# ---   union_append_bundles
-# ---   copy_rootcopy_content
-# ---   init_devs
-# ---   find_data_try
-# ---   device_bestfs
-# Deleted function:
-# ---   filter_load
-# ---   filter_noload
-# ---   init_network_dev
+###################################
+# Modified by: Sevastyanov S.   ###
+# New function:                 ###    
+# ---   find_core_modules_try   ###
+# ---   check_point_mount       ### 
+# Modified function:            ###
+# ---   union_append_bundles    ###
+# ---   copy_rootcopy_content   ###
+# ---   init_devs               ###
+# ---   find_data_try           ###
+# ---   device_bestfs           ###
+# Deleted function:             ###
+# ---   filter_load             ###
+# ---   filter_noload           ###
+# ---   init_network_dev        ###
+###################################
 
 # =================================================================
 # debug and output functions
