@@ -155,14 +155,14 @@ find_core_modules_try()
       mount -r "$DEVICE" "$1" $FS $OPTIONS 2>/dev/null
       IMAGES="$2"
       if [ "$(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')" -ne "" ]; then
-        for BUNDLE in $(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')
+        for MODULES in $(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')
         do
-          BUNDLE="$1/$IMAGES/$BUNDLE"           
-          BUN="$(basename "$BUNDLE")"           
-          cp -r "$BUNDLE" /lib
-          gunzip /lib/"$BUN"
-          BUN="${BUN%.*}"
-          tar -C /lib -xf /lib/"$BUN"
+          MODULES="$1/$IMAGES/$MODULES"           
+          MOD="$(basename $MODULES)"           
+          cp -r "$MODULES" /lib
+          gunzip /lib/"$MOD"
+          MOD="${MOD%.*}"
+          tar -C /lib -xf /lib/"$MOD"
         done
       fi      
       # unmount twice, since there could be mounted ISO as loop too. If not, it doesn't hurt
