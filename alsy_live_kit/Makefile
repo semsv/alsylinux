@@ -1,5 +1,5 @@
 #!/bin/make
-.PHONY all create images clean
+.PHONY: all create images clean
 all:
 	file="images-'$(uname -r)'.tar"
 	tar -zcvf $file lib/modules
