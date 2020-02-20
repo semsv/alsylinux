@@ -28,28 +28,29 @@
    cd build_ &&
 
 if [ "$arch" == "x86-64"]; then
-         ../$app/configure --prefix=$glibpref                        \
-                           CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
-                           --disable-werror                         \
-                           --enable-kernel=3.2                      \
-                           --enable-multilib                        \
-                           --enable-stack-protector=strong          \
-                           --with-headers=/usr/include              \
-                           --libexecdir=$glibpref/lib64/$app        \
-                           --libdir=$glibpref/lib64                 \
-                           libc_cv_slibdir=$glibpref/lib64
+# for x86-64 architecture
+../$app/configure --prefix=$glibpref                       \
+                  CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
+                  --disable-werror                         \
+                  --enable-kernel=3.2                      \
+                  --enable-multilib                        \
+                  --enable-stack-protector=strong          \
+                  --with-headers=/usr/include              \
+                  --libexecdir=$glibpref/lib64/$app        \
+                  --libdir=$glibpref/lib64                 \
+                  libc_cv_slibdir=$glibpref/lib64
 else                           
 # for x86-32 architecture
-../$app/configure --prefix=$glibpref \
-     CC="gcc -m32" CXX="g++ -m32" \
-     CFLAGS="-O2 -march=i686" \
-     CXXFLAGS="-O2 -march=i686" \     
-     --disable-werror \
-     --enable-kernel=3.2 \
-     --enable-multilib                         \
-     --enable-stack-protector=strong           \
-     --with-headers=/usr/include               \
-     --libexecdir=$glibpref/lib32/$app         \
-     --libdir=$glibpref/lib32                  \
-     libc_cv_slibdir=$glibpref/lib32
+../$app/configure --prefix=$glibpref                 \
+                  CC="gcc -m32" CXX="g++ -m32"       \
+                  CFLAGS="-O2 -march=i686"           \
+                  CXXFLAGS="-O2 -march=i686"         \     
+                  --disable-werror                   \
+                  --enable-kernel=3.2                \
+                  --enable-multilib                  \
+                  --enable-stack-protector=strong    \
+                  --with-headers=/usr/include        \
+                  --libexecdir=$glibpref/lib32/$app  \
+                  --libdir=$glibpref/lib32           \
+                  libc_cv_slibdir=$glibpref/lib32
 fi
