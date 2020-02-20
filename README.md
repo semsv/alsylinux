@@ -8,37 +8,18 @@
 #  BIOS
   +
 #  SYSLINUX
-  +
-  /boot/syslinux.cfg
-  
-   ->
-
+  +  /boot/syslinux.cfg    
 # LINUX KERNEL   
-  +
-  /core/VMLINUZ
-  +
-  /core/INITRFS.IMG
-  
-   ->
-   
+  +  /core/VMLINUZ
+  +  /core/INITRFS.IMG   
 # ALSY-LIVE-KIT
-  +
-  ./INIT
-  +
-  livekitlib
-  
-   ->
-   
+  + ./INIT
+  + livekitlib  
 # ALSY-INIT-CORE
-  +
-  ./INIT 3
-  +
-  /etc/inittab 
-  +
-  /etc/rc.d/rc.alsy.init
-  +
-  /etc/rc.d/rc3.d/A*
-
+  + ./INIT 3
+  + /etc/inittab 
+  + /etc/rc.d/rc.alsy.init
+  + /etc/rc.d/rc3.d/A*
 -------------------------------------------------------------------------------------------
 * These are the default runlevels in AlsyLinux:
 *   0 = halt
