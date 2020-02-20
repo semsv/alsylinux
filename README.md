@@ -8,6 +8,8 @@
   BIOS
    ->
   SYSLINUX
+  +
+  /boot/syslinux.cfg
    ->
   VMLINUZ
   +
