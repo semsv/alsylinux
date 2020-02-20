@@ -29,5 +29,9 @@
    
   ./INIT 3
   +
-  /etc/inittab
+  /etc/inittab 
+  +
+  /etc/rc.d/rc.alsy.init
+  +
+  /etc/rc.d/rc3.d/A*
 
