@@ -1,5 +1,7 @@
 #!/bin/make
 # Makefile Script to create RAMFSDISK for loading Alsy Linux OS using SYSLINUX
+# Author: Sevastyanov S.V.
+
 .PHONY: all create images clean
 all:
 	file="images-'$(uname -r)'.tar"
