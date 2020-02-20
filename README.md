@@ -6,17 +6,28 @@
 Схематично загрузку можно представить так:
 
   BIOS
+   
    ->
+   
   SYSLINUX
   +
   /boot/syslinux.cfg
+  
    ->
+   
   /core/VMLINUZ
   +
   /core/INITRFS.IMG
+  
+   ->
+  
+  ./INIT
+  +
+  livekitlib
+  
    ->
    
-   ->
-  ./INIT 0 1 2 3 4 5 6
-  /etc/rc.d
+  ./INIT 3
+  +
+  /etc/rc.d/rc.
 
