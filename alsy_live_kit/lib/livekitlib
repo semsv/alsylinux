@@ -20,6 +20,7 @@
 # ---   init_zram               ###
 # ---   init_swap               ###
 # ---   download_data_pxe       ###
+# ---   sortmod                 ###
 ###################################
 
 # =================================================================
@@ -508,36 +509,36 @@ copy_to_ram()
 
 # load filter
 #
-#filter_load()
-#{
-#   local FILTER
-#   FILTER=$(cmdline_value load)
-#   if [ "$FILTER" = "" ]; then
-#      cat -
-#   else
-#      cat - | egrep "$FILTER"
-#  fi
-#}
+##filter_load()
+##{
+##   local FILTER
+##   FILTER=$(cmdline_value load)
+##   if [ "$FILTER" = "" ]; then
+##      cat -
+##   else
+##      cat - | egrep "$FILTER"
+##  fi
+##}
 
 # noload filter
 #
-#filter_noload()
-#{
-#   local FILTER
-#   FILTER=$(cmdline_value noload)
-#   if [ "$FILTER" = "" ]; then
-#      cat -
-#   else
-#      cat - | egrep -v "$FILTER"
-#   fi
-#}
+##filter_noload()
+##{
+##   local FILTER
+##   FILTER=$(cmdline_value noload)
+##   if [ "$FILTER" = "" ]; then
+##      cat -
+##   else
+##      cat - | egrep -v "$FILTER"
+##   fi
+##}
 
 # sort modules by number even if they are in subdirectory
 #
-sortmod()
-{
-   cat - | sed -r "s,(.*/(.*)),\\2:\\1," | sort -n | cut -d : -f 2-
-}
+##sortmod()
+##{
+##   cat - | sed -r "s,(.*/(.*)),\\2:\\1," | sort -n | cut -d : -f 2-
+##}
 
 # Mount squashfs filesystem bundles
 # and add them to union
