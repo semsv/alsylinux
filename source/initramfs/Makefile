@@ -1,3 +1,4 @@
+#!/bin/make
 extract:
 	mv initrfs.img initrfs.img.xz
 	unxz initrfs.img.xz
