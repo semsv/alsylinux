@@ -11,10 +11,12 @@
   +
   /boot/syslinux.cfg
    ->
-  VMLINUZ
+  /core/VMLINUZ
   +
-  INITRFS.IMG
+  /core/INITRFS.IMG
    ->
-  INIT 0 1 2 3 4 5 6
+   
+   ->
+  ./INIT 0 1 2 3 4 5 6
   /etc/rc.d
 
