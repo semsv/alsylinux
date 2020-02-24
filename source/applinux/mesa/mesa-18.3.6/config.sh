@@ -6,7 +6,6 @@ XORG_PREFIX="/usr/src/tools/$app"
 # Install Mesa by running the following commands:
 #CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}"
 #export LLVM_CONFIG=/usr/bin/llvm-config32
-#patch -Np1 -i ../mesa-19.3.3-fix_svga_vmwgfx_segfaults-1.patch &&
 
 if [ -d ../build ]; then
   rm -rd ../build
