@@ -409,7 +409,7 @@ fi
 
 #Также проверим логи, иногда в процессе установки возникают ошибки
 if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error 2>/dev/null)" != "" ]; then
-  if [ "$(grep -i "make" $AppFullName/setup_install_err.log | grep -i error | grep "(ignored)" 2>/dev/null)" != "" ]; then
+  if [ "$(grep -i 'make' $AppFullName/setup_install_err.log | grep -i error | grep '(ignored)' 2>/dev/null)" != "" ]; then
     echo "Error ignored!"
   else
     echo "Error: Installation finished with error! Look setup_install_err.log for more info!"
@@ -487,7 +487,9 @@ rm -rd .new_install
 rm -rd $AppPrefix/$AppName
 
 #Выполняем установку программы в операционную систему
-cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/alsylin/modules
+if [ "$LIVEKITNAME" != "" ]; then
+  cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/modules
+fi
 
 exit
 ############################################################################################################
