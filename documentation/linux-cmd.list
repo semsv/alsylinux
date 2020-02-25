@@ -77,3 +77,16 @@ b.) по содержимому файлов ( помимо наличия, ср
   
 19. Форматный вывод времени + наносекунды через точку (Например 06:47:42.773)
     date +"%T.%3N"
+
+20. Изменить корневой каталог
+
+sudo mount /dev/sda5 /mnt
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /dev/pts /mnt/dev/pts
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+
+Теперь вы можете покинуть live-окружение и перейти в окружение установленного на разделе, представленном файлом устройства /dev/sda5, дистрибутива с помощью утилиты chroot:
+
+sudo chroot /mnt /bin/bash
+
