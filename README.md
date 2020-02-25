@@ -8,7 +8,8 @@
 #  BIOS
   + select boot loader...
 #  SYSLINUX
-  +  /boot/syslinux.com
+  +  /boot/syslinux.com (для загрузки с FAT, FAT32, NTFS)
+  +  /boot/extlinux.exe (для загрузки с ext2/ext3/ext4 или btrfs)
   +  /boot/syslinux.cfg    
 # LINUX KERNEL   
   +  /core/VMLINUZ
