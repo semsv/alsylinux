@@ -1,12 +1,11 @@
  
  # Содержимое Sysvinit #
  
- # Установленныепрограммы: #
- 
- bootlogd, 
- fstab-decode, 
- halt, 
- init, 
+ # Установленные программы: #
+   bootlogd, 
+   fstab-decode, 
+   halt, 
+   init, 
  killall5, 
  last, 
  lastb (link to last),
