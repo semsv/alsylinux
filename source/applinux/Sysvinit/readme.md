@@ -23,6 +23,6 @@ Sysvinit (2.88dsf) - 108 KB:
 
 Домашняя страница: http://savannah.nongnu.org/projects/sysvinit
 
-Загрузить: http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2MD5 
+Загрузить: http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2
 
-сумма: 6eda8a97b86e0a6f59dabbf25202aa6f
+MD5 сумма: 6eda8a97b86e0a6f59dabbf25202aa6f
