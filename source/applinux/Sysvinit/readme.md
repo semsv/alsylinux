@@ -2,8 +2,8 @@
  # Содержимое Sysvinit #
  
  # Установленные программы: #
-   bootlogd, 
-   fstab-decode, 
+ * bootlogd, 
+ * fstab-decode, 
    halt, 
    init, 
  killall5, 
