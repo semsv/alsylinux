@@ -9,9 +9,7 @@ Welcome to AlsyLinux v1.0.0 X86_64
  Copy to RAM
 
  Copies all data (entire /ALSYLINUX/ directory) to memory during ALSYLINUX startup
- so you can eject the boot device. Make sure to uncheck persistent changes
- (see above) else your boot device will be still in use.
-
+ so you can eject the boot device.
 
 RU: Это файл помощи в установке операционной системы AlsyLinux
 
@@ -24,5 +22,4 @@ RU: Это файл помощи в установке операционной 
   Копировать в RAM
 
   Копирует все данные (весь каталог / ALSYLINUX /) в память во время запуска ALSYLINUX
-  так что вы можете извлечь загрузочное устройство. Убедитесь, что сняли постоянные изменения
-  (см. выше), иначе ваше загрузочное устройство все еще будет использоваться.
+  так что вы можете извлечь загрузочное устройство.
