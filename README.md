@@ -35,4 +35,4 @@
 
 # Установка на флешку ОС AlsyLinux из Linux
 1. Скопировать на USB Flash Drive папку alsylinux
-2. Зайти в эту папку и набрать команду (c правами root): "cd boot && ./extlinux -i $PWD"
+2. Зайти в эту папку и набрать команду (c правами root): "cd boot && ./extlinux.exe -i $PWD"
