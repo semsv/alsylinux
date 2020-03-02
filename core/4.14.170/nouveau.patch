@@ -116,3 +116,20 @@ index 4f94b78cb464..d86110cdf085 100644
  	WREG32(NI_INPUT_CSC_CONTROL + radeon_crtc->crtc_offset,
  	       (NI_INPUT_CSC_GRPH_MODE(NI_INPUT_CSC_BYPASS) |
  		NI_INPUT_CSC_OVL_MODE(NI_INPUT_CSC_BYPASS)));
+
+diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_cmdbuf_res.c b/drivers/gpu/drm/vmwgfx/vmwgfx_cmdbuf_res.c
+index 36c7b6c839c0..738ad2fc79a2 100644
+--- a/drivers/gpu/drm/vmwgfx/vmwgfx_cmdbuf_res.c
++++ b/drivers/gpu/drm/vmwgfx/vmwgfx_cmdbuf_res.c
+@@ -210,8 +210,10 @@ int vmw_cmdbuf_res_add(struct vmw_cmdbuf_res_manager *man,
+ 
+ 	cres->hash.key = user_key | (res_type << 24);
+ 	ret = drm_ht_insert_item(&man->resources, &cres->hash);
+-	if (unlikely(ret != 0))
++	if (unlikely(ret != 0)) {
++		kfree(cres);
+ 		goto out_invalid_key;
++	}
+ 
+ 	cres->state = VMW_CMDBUF_RES_ADD;
+ 	cres->res = vmw_resource_reference(res);
