@@ -102,3 +102,17 @@ index 30491d132d59..fbd10a67c6c6 100644
  	*psb = &gsb->base;
  
  	ret = nvkm_secboot_ctor(&gm20b_secboot, acr, device, index, &gsb->base);
+  
+diff --git a/drivers/gpu/drm/radeon/radeon_display.c b/drivers/gpu/drm/radeon/radeon_display.c
+index 4f94b78cb464..d86110cdf085 100644
+--- a/drivers/gpu/drm/radeon/radeon_display.c
++++ b/drivers/gpu/drm/radeon/radeon_display.c
+@@ -119,6 +119,8 @@ static void dce5_crtc_load_lut(struct drm_crtc *crtc)
+ 
+ 	DRM_DEBUG_KMS("%d\n", radeon_crtc->crtc_id);
+ 
++	msleep(10);
++
+ 	WREG32(NI_INPUT_CSC_CONTROL + radeon_crtc->crtc_offset,
+ 	       (NI_INPUT_CSC_GRPH_MODE(NI_INPUT_CSC_BYPASS) |
+ 		NI_INPUT_CSC_OVL_MODE(NI_INPUT_CSC_BYPASS)));
