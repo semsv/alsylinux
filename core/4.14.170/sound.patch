@@ -1,0 +1,401 @@
+diff --git a/sound/core/control.c b/sound/core/control.c
+index 36571cd49be3..a0ce22164957 100644
+--- a/sound/core/control.c
++++ b/sound/core/control.c
+@@ -1467,8 +1467,9 @@ static int call_tlv_handler(struct snd_ctl_file *file, int op_flag,
+ 	if (kctl->tlv.c == NULL)
+ 		return -ENXIO;
+ 
+-	/* When locked, this is unavailable. */
+-	if (vd->owner != NULL && vd->owner != file)
++	/* Write and command operations are not allowed for locked element. */
++	if (op_flag != SNDRV_CTL_TLV_OP_READ &&
++	    vd->owner != NULL && vd->owner != file)
+ 		return -EPERM;
+ 
+ 	return kctl->tlv.c(kctl, op_flag, size, buf);
+  
+  
+diff --git a/sound/core/seq/seq_clientmgr.c b/sound/core/seq/seq_clientmgr.c
+index 92b0d4523a07..6fe93d5f6f71 100644
+--- a/sound/core/seq/seq_clientmgr.c
++++ b/sound/core/seq/seq_clientmgr.c
+@@ -564,7 +564,7 @@ static int update_timestamp_of_queue(struct snd_seq_event *event,
+ 	event->queue = queue;
+ 	event->flags &= ~SNDRV_SEQ_TIME_STAMP_MASK;
+ 	if (real_time) {
+-		event->time.time = snd_seq_timer_get_cur_time(q->timer);
++		event->time.time = snd_seq_timer_get_cur_time(q->timer, true);
+ 		event->flags |= SNDRV_SEQ_TIME_STAMP_REAL;
+ 	} else {
+ 		event->time.tick = snd_seq_timer_get_cur_tick(q->timer);
+@@ -1639,7 +1639,7 @@ static int snd_seq_ioctl_get_queue_status(struct snd_seq_client *client,
+ 	tmr = queue->timer;
+ 	status->events = queue->tickq->cells + queue->timeq->cells;
+ 
+-	status->time = snd_seq_timer_get_cur_time(tmr);
++	status->time = snd_seq_timer_get_cur_time(tmr, true);
+ 	status->tick = snd_seq_timer_get_cur_tick(tmr);
+ 
+ 	status->running = tmr->running;
+    
+diff --git a/sound/core/seq/seq_queue.c b/sound/core/seq/seq_queue.c
+index 1a6dc4ff44a6..ea1aa0796276 100644
+--- a/sound/core/seq/seq_queue.c
++++ b/sound/core/seq/seq_queue.c
+@@ -261,6 +261,8 @@ void snd_seq_check_queue(struct snd_seq_queue *q, int atomic, int hop)
+ {
+ 	unsigned long flags;
+ 	struct snd_seq_event_cell *cell;
++	snd_seq_tick_time_t cur_tick;
++	snd_seq_real_time_t cur_time;
+ 
+ 	if (q == NULL)
+ 		return;
+@@ -277,17 +279,18 @@ void snd_seq_check_queue(struct snd_seq_queue *q, int atomic, int hop)
+ 
+       __again:
+ 	/* Process tick queue... */
++	cur_tick = snd_seq_timer_get_cur_tick(q->timer);
+ 	for (;;) {
+-		cell = snd_seq_prioq_cell_out(q->tickq,
+-					      &q->timer->tick.cur_tick);
++		cell = snd_seq_prioq_cell_out(q->tickq, &cur_tick);
+ 		if (!cell)
+ 			break;
+ 		snd_seq_dispatch_event(cell, atomic, hop);
+ 	}
+ 
+ 	/* Process time queue... */
++	cur_time = snd_seq_timer_get_cur_time(q->timer, false);
+ 	for (;;) {
+-		cell = snd_seq_prioq_cell_out(q->timeq, &q->timer->cur_time);
++		cell = snd_seq_prioq_cell_out(q->timeq, &cur_time);
+ 		if (!cell)
+ 			break;
+ 		snd_seq_dispatch_event(cell, atomic, hop);
+@@ -415,6 +418,7 @@ int snd_seq_queue_check_access(int queueid, int client)
+ int snd_seq_queue_set_owner(int queueid, int client, int locked)
+ {
+ 	struct snd_seq_queue *q = queueptr(queueid);
++	unsigned long flags;
+ 
+ 	if (q == NULL)
+ 		return -EINVAL;
+@@ -424,8 +428,10 @@ int snd_seq_queue_set_owner(int queueid, int client, int locked)
+ 		return -EPERM;
+ 	}
+ 
++	spin_lock_irqsave(&q->owner_lock, flags);
+ 	q->locked = locked ? 1 : 0;
+ 	q->owner = client;
++	spin_unlock_irqrestore(&q->owner_lock, flags);
+ 	queue_access_unlock(q);
+ 	queuefree(q);
+ 
+@@ -564,15 +570,17 @@ void snd_seq_queue_client_termination(int client)
+ 	unsigned long flags;
+ 	int i;
+ 	struct snd_seq_queue *q;
++	bool matched;
+ 
+ 	for (i = 0; i < SNDRV_SEQ_MAX_QUEUES; i++) {
+ 		if ((q = queueptr(i)) == NULL)
+ 			continue;
+ 		spin_lock_irqsave(&q->owner_lock, flags);
+-		if (q->owner == client)
++		matched = (q->owner == client);
++		if (matched)
+ 			q->klocked = 1;
+ 		spin_unlock_irqrestore(&q->owner_lock, flags);
+-		if (q->owner == client) {
++		if (matched) {
+ 			if (q->timer->running)
+ 				snd_seq_timer_stop(q->timer);
+ 			snd_seq_timer_reset(q->timer);
+@@ -764,6 +772,8 @@ void snd_seq_info_queues_read(struct snd_info_entry *entry,
+ 	int i, bpm;
+ 	struct snd_seq_queue *q;
+ 	struct snd_seq_timer *tmr;
++	bool locked;
++	int owner;
+ 
+ 	for (i = 0; i < SNDRV_SEQ_MAX_QUEUES; i++) {
+ 		if ((q = queueptr(i)) == NULL)
+@@ -775,9 +785,14 @@ void snd_seq_info_queues_read(struct snd_info_entry *entry,
+ 		else
+ 			bpm = 0;
+ 
++		spin_lock_irq(&q->owner_lock);
++		locked = q->locked;
++		owner = q->owner;
++		spin_unlock_irq(&q->owner_lock);
++
+ 		snd_iprintf(buffer, "queue %d: [%s]\n", q->queue, q->name);
+-		snd_iprintf(buffer, "owned by client    : %d\n", q->owner);
+-		snd_iprintf(buffer, "lock status        : %s\n", q->locked ? "Locked" : "Free");
++		snd_iprintf(buffer, "owned by client    : %d\n", owner);
++		snd_iprintf(buffer, "lock status        : %s\n", locked ? "Locked" : "Free");
+ 		snd_iprintf(buffer, "queued time events : %d\n", snd_seq_prioq_avail(q->timeq));
+ 		snd_iprintf(buffer, "queued tick events : %d\n", snd_seq_prioq_avail(q->tickq));
+ 		snd_iprintf(buffer, "timer state        : %s\n", tmr->running ? "Running" : "Stopped");
+
+diff --git a/sound/core/seq/seq_timer.c b/sound/core/seq/seq_timer.c
+index 0e1feb597586..bd5e5a5d52a8 100644
+--- a/sound/core/seq/seq_timer.c
++++ b/sound/core/seq/seq_timer.c
+@@ -436,14 +436,15 @@ int snd_seq_timer_continue(struct snd_seq_timer *tmr)
+ }
+ 
+ /* return current 'real' time. use timeofday() to get better granularity. */
+-snd_seq_real_time_t snd_seq_timer_get_cur_time(struct snd_seq_timer *tmr)
++snd_seq_real_time_t snd_seq_timer_get_cur_time(struct snd_seq_timer *tmr,
++					       bool adjust_ktime)
+ {
+ 	snd_seq_real_time_t cur_time;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&tmr->lock, flags);
+ 	cur_time = tmr->cur_time;
+-	if (tmr->running) { 
++	if (adjust_ktime && tmr->running) {
+ 		struct timespec64 tm;
+ 
+ 		ktime_get_ts64(&tm);
+@@ -460,7 +461,13 @@ snd_seq_real_time_t snd_seq_timer_get_cur_time(struct snd_seq_timer *tmr)
+  high PPQ values) */
+ snd_seq_tick_time_t snd_seq_timer_get_cur_tick(struct snd_seq_timer *tmr)
+ {
+-	return tmr->tick.cur_tick;
++	snd_seq_tick_time_t cur_tick;
++	unsigned long flags;
++
++	spin_lock_irqsave(&tmr->lock, flags);
++	cur_tick = tmr->tick.cur_tick;
++	spin_unlock_irqrestore(&tmr->lock, flags);
++	return cur_tick;
+ }
+
+diff --git a/sound/core/seq/seq_timer.h b/sound/core/seq/seq_timer.h
+index 9506b661fe5b..5d47d559465e 100644
+--- a/sound/core/seq/seq_timer.h
++++ b/sound/core/seq/seq_timer.h
+@@ -135,7 +135,8 @@ int snd_seq_timer_set_ppq(struct snd_seq_timer *tmr, int ppq);
+ int snd_seq_timer_set_position_tick(struct snd_seq_timer *tmr, snd_seq_tick_time_t position);
+ int snd_seq_timer_set_position_time(struct snd_seq_timer *tmr, snd_seq_real_time_t position);
+ int snd_seq_timer_set_skew(struct snd_seq_timer *tmr, unsigned int skew, unsigned int base);
+-snd_seq_real_time_t snd_seq_timer_get_cur_time(struct snd_seq_timer *tmr);
++snd_seq_real_time_t snd_seq_timer_get_cur_time(struct snd_seq_timer *tmr,
++					       bool adjust_ktime);
+ snd_seq_tick_time_t snd_seq_timer_get_cur_tick(struct snd_seq_timer *tmr);
+ 
+ extern int seq_default_timer_class;
+ 
+diff --git a/sound/hda/hdmi_chmap.c b/sound/hda/hdmi_chmap.c
+index f21633cd9b38..acbe61b8db7b 100644
+--- a/sound/hda/hdmi_chmap.c
++++ b/sound/hda/hdmi_chmap.c
+@@ -249,7 +249,7 @@ void snd_hdac_print_channel_allocation(int spk_alloc, char *buf, int buflen)
+ 
+ 	for (i = 0, j = 0; i < ARRAY_SIZE(cea_speaker_allocation_names); i++) {
+ 		if (spk_alloc & (1 << i))
+-			j += snprintf(buf + j, buflen - j,  " %s",
++			j += scnprintf(buf + j, buflen - j,  " %s",
+ 					cea_speaker_allocation_names[i]);
+ 	}
+ 	buf[j] = '\0';	/* necessary when j == 0 */
+  
+diff --git a/sound/pci/hda/hda_codec.c b/sound/pci/hda/hda_codec.c
+index e3f3351da480..a6f7561e7bb9 100644
+--- a/sound/pci/hda/hda_codec.c
++++ b/sound/pci/hda/hda_codec.c
+@@ -4002,7 +4002,7 @@ void snd_print_pcm_bits(int pcm, char *buf, int buflen)
+ 
+ 	for (i = 0, j = 0; i < ARRAY_SIZE(bits); i++)
+ 		if (pcm & (AC_SUPPCM_BITS_8 << i))
+-			j += snprintf(buf + j, buflen - j,  " %d", bits[i]);
++			j += scnprintf(buf + j, buflen - j,  " %d", bits[i]);
+ 
+ 	buf[j] = '\0'; /* necessary when j == 0 */
+ }
+ 
+diff --git a/sound/pci/hda/hda_eld.c b/sound/pci/hda/hda_eld.c
+index ba7fe9b6655c..864cc8c9ada0 100644
+--- a/sound/pci/hda/hda_eld.c
++++ b/sound/pci/hda/hda_eld.c
+@@ -373,7 +373,7 @@ static void hdmi_print_pcm_rates(int pcm, char *buf, int buflen)
+ 
+ 	for (i = 0, j = 0; i < ARRAY_SIZE(alsa_rates); i++)
+ 		if (pcm & (1 << i))
+-			j += snprintf(buf + j, buflen - j,  " %d",
++			j += scnprintf(buf + j, buflen - j,  " %d",
+ 				alsa_rates[i]);
+ 
+ 	buf[j] = '\0'; /* necessary when j == 0 */
+  
+
+diff --git a/sound/pci/hda/hda_sysfs.c b/sound/pci/hda/hda_sysfs.c
+index 9b7efece4484..2a173de7ca02 100644
+--- a/sound/pci/hda/hda_sysfs.c
++++ b/sound/pci/hda/hda_sysfs.c
+@@ -221,7 +221,7 @@ static ssize_t init_verbs_show(struct device *dev,
+ 	mutex_lock(&codec->user_mutex);
+ 	for (i = 0; i < codec->init_verbs.used; i++) {
+ 		struct hda_verb *v = snd_array_elem(&codec->init_verbs, i);
+-		len += snprintf(buf + len, PAGE_SIZE - len,
++		len += scnprintf(buf + len, PAGE_SIZE - len,
+ 				"0x%02x 0x%03x 0x%04x\n",
+ 				v->nid, v->verb, v->param);
+ 	}
+@@ -271,7 +271,7 @@ static ssize_t hints_show(struct device *dev,
+ 	mutex_lock(&codec->user_mutex);
+ 	for (i = 0; i < codec->hints.used; i++) {
+ 		struct hda_hint *hint = snd_array_elem(&codec->hints, i);
+-		len += snprintf(buf + len, PAGE_SIZE - len,
++		len += scnprintf(buf + len, PAGE_SIZE - len,
+ 				"%s = %s\n", hint->key, hint->val);
+ 	}
+ 	mutex_unlock(&codec->user_mutex);
+
+diff --git a/sound/pci/hda/patch_conexant.c b/sound/pci/hda/patch_conexant.c
+index 382b6d2ed803..9cc9304ff21a 100644
+--- a/sound/pci/hda/patch_conexant.c
++++ b/sound/pci/hda/patch_conexant.c
+@@ -969,6 +969,7 @@ static const struct snd_pci_quirk cxt5066_fixups[] = {
+ 	SND_PCI_QUIRK(0x17aa, 0x215f, "Lenovo T510", CXT_PINCFG_LENOVO_TP410),
+ 	SND_PCI_QUIRK(0x17aa, 0x21ce, "Lenovo T420", CXT_PINCFG_LENOVO_TP410),
+ 	SND_PCI_QUIRK(0x17aa, 0x21cf, "Lenovo T520", CXT_PINCFG_LENOVO_TP410),
++	SND_PCI_QUIRK(0x17aa, 0x21d2, "Lenovo T420s", CXT_PINCFG_LENOVO_TP410),
+ 	SND_PCI_QUIRK(0x17aa, 0x21da, "Lenovo X220", CXT_PINCFG_LENOVO_TP410),
+ 	SND_PCI_QUIRK(0x17aa, 0x21db, "Lenovo X220-tablet", CXT_PINCFG_LENOVO_TP410),
+ 	SND_PCI_QUIRK(0x17aa, 0x38af, "Lenovo IdeaPad Z560", CXT_FIXUP_MUTE_LED_EAPD),
+
+diff --git a/sound/pci/hda/patch_hdmi.c b/sound/pci/hda/patch_hdmi.c
+index f21405597215..12913368c231 100644
+--- a/sound/pci/hda/patch_hdmi.c
++++ b/sound/pci/hda/patch_hdmi.c
+@@ -2574,9 +2574,12 @@ static int alloc_intel_hdmi(struct hda_codec *codec)
+ /* parse and post-process for Intel codecs */
+ static int parse_intel_hdmi(struct hda_codec *codec)
+ {
+-	int err;
++	int err, retries = 3;
++
++	do {
++		err = hdmi_parse_codec(codec);
++	} while (err < 0 && retries--);
+ 
+-	err = hdmi_parse_codec(codec);
+ 	if (err < 0) {
+ 		generic_spec_free(codec);
+ 		return err;
+
+diff --git a/sound/sh/aica.c b/sound/sh/aica.c
+index fdc680ae8aa0..d9acf551a898 100644
+--- a/sound/sh/aica.c
++++ b/sound/sh/aica.c
+@@ -117,10 +117,10 @@ static void spu_memset(u32 toi, u32 what, int length)
+ }
+ 
+ /* spu_memload - write to SPU address space */
+-static void spu_memload(u32 toi, void *from, int length)
++static void spu_memload(u32 toi, const void *from, int length)
+ {
+ 	unsigned long flags;
+-	u32 *froml = from;
++	const u32 *froml = from;
+ 	u32 __iomem *to = (u32 __iomem *) (SPU_MEMORY_BASE + toi);
+ 	int i;
+ 	u32 val;
+  
+diff --git a/sound/sh/sh_dac_audio.c b/sound/sh/sh_dac_audio.c
+index 834b2574786f..6251b5e1b64a 100644
+--- a/sound/sh/sh_dac_audio.c
++++ b/sound/sh/sh_dac_audio.c
+@@ -190,7 +190,6 @@ static int snd_sh_dac_pcm_copy(struct snd_pcm_substream *substream,
+ {
+ 	/* channel is not used (interleaved data) */
+ 	struct snd_sh_dac *chip = snd_pcm_substream_chip(substream);
+-	struct snd_pcm_runtime *runtime = substream->runtime;
+ 
+ 	if (copy_from_user_toio(chip->data_buffer + pos, src, count))
+ 		return -EFAULT;
+@@ -210,7 +209,6 @@ static int snd_sh_dac_pcm_copy_kernel(struct snd_pcm_substream *substream,
+ {
+ 	/* channel is not used (interleaved data) */
+ 	struct snd_sh_dac *chip = snd_pcm_substream_chip(substream);
+-	struct snd_pcm_runtime *runtime = substream->runtime;
+ 
+ 	memcpy_toio(chip->data_buffer + pos, src, count);
+ 	chip->buffer_end = chip->data_buffer + pos + count;
+@@ -229,7 +227,6 @@ static int snd_sh_dac_pcm_silence(struct snd_pcm_substream *substream,
+ {
+ 	/* channel is not used (interleaved data) */
+ 	struct snd_sh_dac *chip = snd_pcm_substream_chip(substream);
+-	struct snd_pcm_runtime *runtime = substream->runtime;
+ 
+ 	memset_io(chip->data_buffer + pos, 0, count);
+ 	chip->buffer_end = chip->data_buffer + pos + count;
+ 
+
+diff --git a/sound/soc/atmel/Kconfig b/sound/soc/atmel/Kconfig
+index 4a56f3dfba51..23887613b5c3 100644
+--- a/sound/soc/atmel/Kconfig
++++ b/sound/soc/atmel/Kconfig
+@@ -25,6 +25,8 @@ config SND_ATMEL_SOC_DMA
+ 
+ config SND_ATMEL_SOC_SSC_DMA
+ 	tristate
++	select SND_ATMEL_SOC_DMA
++	select SND_ATMEL_SOC_PDC
+ 
+ config SND_ATMEL_SOC_SSC
+ 	tristate
+
+diff --git a/sound/soc/sunxi/sun8i-codec.c b/sound/soc/sunxi/sun8i-codec.c
+index 7a312168f864..a031f25031b4 100644
+--- a/sound/soc/sunxi/sun8i-codec.c
++++ b/sound/soc/sunxi/sun8i-codec.c
+@@ -71,6 +71,7 @@
+ 
+ #define SUN8I_SYS_SR_CTRL_AIF1_FS_MASK		GENMASK(15, 12)
+ #define SUN8I_SYS_SR_CTRL_AIF2_FS_MASK		GENMASK(11, 8)
++#define SUN8I_AIF1CLK_CTRL_AIF1_DATA_FMT_MASK	GENMASK(3, 2)
+ #define SUN8I_AIF1CLK_CTRL_AIF1_WORD_SIZ_MASK	GENMASK(5, 4)
+ #define SUN8I_AIF1CLK_CTRL_AIF1_LRCK_DIV_MASK	GENMASK(8, 6)
+ #define SUN8I_AIF1CLK_CTRL_AIF1_BCLK_DIV_MASK	GENMASK(12, 9)
+@@ -221,7 +222,7 @@ static int sun8i_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
+ 		return -EINVAL;
+ 	}
+ 	regmap_update_bits(scodec->regmap, SUN8I_AIF1CLK_CTRL,
+-			   BIT(SUN8I_AIF1CLK_CTRL_AIF1_DATA_FMT),
++			   SUN8I_AIF1CLK_CTRL_AIF1_DATA_FMT_MASK,
+ 			   value << SUN8I_AIF1CLK_CTRL_AIF1_DATA_FMT);
+ 
+ 	return 0;
+
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index 51ee7910e98c..4872c27f6054 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -1151,6 +1151,7 @@ bool snd_usb_get_sample_rate_quirk(struct snd_usb_audio *chip)
+ 	case USB_ID(0x1de7, 0x0014): /* Phoenix Audio TMX320 */
+ 	case USB_ID(0x1de7, 0x0114): /* Phoenix Audio MT202pcs */
+ 	case USB_ID(0x21B4, 0x0081): /* AudioQuest DragonFly */
++	case USB_ID(0x2912, 0x30c8): /* Audioengine D1 */
+ 		return true;
+ 	}
+ 	return false;
+
+diff --git a/sound/usb/usx2y/usX2Yhwdep.c b/sound/usb/usx2y/usX2Yhwdep.c
+index f4b3cda412fc..e75271e731b2 100644
+--- a/sound/usb/usx2y/usX2Yhwdep.c
++++ b/sound/usb/usx2y/usX2Yhwdep.c
+@@ -131,7 +131,7 @@ static int snd_usX2Y_hwdep_dsp_status(struct snd_hwdep *hw,
+ 	info->num_dsps = 2;		// 0: Prepad Data, 1: FPGA Code
+ 	if (us428->chip_status & USX2Y_STAT_CHIP_INIT)
+ 		info->chip_ready = 1;
+- 	info->version = USX2Y_DRIVER_VERSION; 
++	info->version = USX2Y_DRIVER_VERSION;
+ 	return 0;
+ }
