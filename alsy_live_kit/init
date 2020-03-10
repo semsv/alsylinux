@@ -22,8 +22,12 @@ init_proc_sysfs
 debug_start                                                           
 init_devs
 init_aufs
+# find data core modules dir with filesystem bundles
+DATA="$(find_data_images 30 "$DATAMNT")"
 # find data dir with filesystem bundles
-DATA="$(find_data 60 "$DATAMNT")"                          
+if [ $DATA = "" ]; then
+  DATA="$(find_data 30 "$DATAMNT")"
+fi
 # init aufs union
 init_union "$CHANGES" "$UNION"                             
 # add data to union
