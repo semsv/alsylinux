@@ -165,6 +165,8 @@ find_core_modules_try()
           MOD="${MOD%.*}"
           tar -C /lib -xf /lib/"$MOD"
         done
+        mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
+        return
       fi      
       # unmount twice, since there could be mounted ISO as loop too. If not, it doesn't hurt
       umount "$1" 2>/dev/null
