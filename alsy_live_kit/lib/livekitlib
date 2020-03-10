@@ -456,6 +456,41 @@ find_data()
 
 }
 
+# Retry finding LIVEKIT data core modules several times,
+# until timeouted or until data is found
+# $1 = timeout
+# $2 = data directory target (mount here)
+#
+find_data_images()
+{
+   debug_log "find_data" "$*"
+
+   local DATA FROM
+   
+   FROM="$(cmdline_value from)"
+   if [ "$FROM" = "" ]; then FROM="$LIVEKITNAME"; fi
+
+   echo_green_star >&2
+   echo -n "Looking for $LIVEKITNAME data images in /$FROM/images .." | tr -s "/" >&2
+   for timeout in $(seq 1 $1); do
+      echo -n "." >&2
+      DATA="$(find_core_modules_try "$2" "$FROM/images")"
+      if [ "$DATA" != "" ]; then
+         echo "" >&2
+         echo "* Found on $(mounted_device "$2")" >&2
+         echo "$DATA"
+         return
+      fi
+      sleep 1
+   done
+   echo "" >&2
+
+   if [ "$DATA" = "" ]; then
+      fatal "$LIVEKITNAME data not found"
+   fi
+
+}
+
 # Copy content of rootcopy directory to union
 # $1 = data directory
 # $2 = union directory
