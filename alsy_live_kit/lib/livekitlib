@@ -155,7 +155,7 @@ find_core_modules_try()
       OPTIONS="$(fs_options $FS)"
       mount -r "$DEVICE" "$1" $FS $OPTIONS 2>/dev/null
       IMAGES="$2"
-      if [ "$(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')" -ne "" ]; then
+      if [ "$(ls -1 $1/$IMAGES | grep '[.]'img.gz'$' 2>/dev/null)" -ne "" ]; then
         for MODULES in $(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')
         do
           MODULES="$1/$IMAGES/$MODULES"           
