@@ -90,3 +90,12 @@ sudo mount --bind /sys /mnt/sys
 
 sudo chroot /mnt /bin/bash
 
+21. Пример команды cdrecord
+
+Пример записи на DVD-RW
+
+cdrecord -dev=/dev/sr0 -speed=16 -eject -v linuxmint-18.1-cinnamon-64bit.iso
+
+Очистка диска командой
+
+cdrecord -dev=/dev/sr0 -v blank=fast
