@@ -1,12 +1,12 @@
-   app=glibc-2.31
-   arch="x86-64"
+app=glibc-2.29
+arch="x86-64"
    
-   if [ ! -f "$app".tar.gz ]; then
-     filedwnld="https://ftp.gnu.org/gnu/glibc/'$app'.tar.gz"
+   if [ ! -f $app.tar.gz ]; then
+     filedwnld="https://ftp.gnu.org/gnu/glibc/$app.tar.gz"
      wget $filedwnld -O "$app".tar.gz
    fi
    
-   if [ "$arch" != "x86-64"]; then
+   if [ "$arch" != "x86-64" ]; then
      sapp="$app'-'$arch"
    else
      sapp="$app"
@@ -27,7 +27,7 @@
    mkdir -p build_ &&
    cd build_ &&
 
-if [ "$arch" == "x86-64"]; then
+if [ "$arch" == "x86-64" ]; then
 # for x86-64 architecture
 ../$app/configure --prefix=$glibpref                       \
                   CC="gcc ${BUILD64}" CXX="g++ ${BUILD64}" \
@@ -53,4 +53,4 @@ else
                   --libexecdir=$glibpref/lib32/$app  \
                   --libdir=$glibpref/lib32           \
                   libc_cv_slibdir=$glibpref/lib32
-fi
+fi 
