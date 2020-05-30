@@ -1,4 +1,4 @@
-app=glibc-2.29
+app=glibc-2.31
 arch="x86-64"
    
    if [ ! -f $app.tar.gz ]; then
@@ -7,23 +7,23 @@ arch="x86-64"
    fi
    
    if [ "$arch" != "x86-64" ]; then
-     sapp="$app'-'$arch"
+     sapp="$app-$arch"
    else
-     sapp="$app"
+     sapp="$app-$arch"
    fi
    glibpref="/usr/src/tools/$sapp"
    
    if [ -d "$app"_src ]; then
      rm -rd "$app"_src
    fi
-   mkdir -p "$app"_src
-   tar -xf "$app".tar.gz -C "$app"_src/
+   mkdir -p "$sapp"_src
+   tar -xf "$app".tar.gz -C "$sapp"_src/
 
-   if [ -d "$app"_src/build_ ]; then
-     rm -rd "$app"_src/build_
+   if [ -d "$sapp"_src/build_ ]; then
+     rm -rd "$sapp"_src/build_
    fi
 
-   cd "$app"_src/ &&
+   cd "$sapp"_src/ &&
    mkdir -p build_ &&
    cd build_ &&
 
