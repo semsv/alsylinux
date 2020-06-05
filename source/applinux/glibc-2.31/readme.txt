@@ -7,7 +7,7 @@ https://ftp.gnu.org/gnu/glibc/glibc-2.31.tar.gz
 
 Выполняем команды:
 
-1. config.sh
+1. ./config.sh
 2. make
 3. make install
 
