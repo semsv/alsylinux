@@ -1,4 +1,4 @@
-app=glibc-2.31
+app=glibc-2.29
 arch="x86-64"
    
    if [ ! -f $app.tar.gz ]; then
@@ -9,8 +9,9 @@ arch="x86-64"
    if [ "$arch" != "x86-64" ]; then
      sapp="$app-$arch"
    else
-     sapp="$app-$arch"
+     sapp="$app"
    fi
+   sed 's/$alsy-app-prefix/'$sapp'/g' "Makefile.am" > "Makefile"
    glibpref="/usr/src/tools/$sapp"
    
    if [ -d "$app"_src ]; then
