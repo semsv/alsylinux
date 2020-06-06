@@ -1,0 +1,48 @@
+При сборке в самом конце может возникнуть такая ошибка:
+
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `PC'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetflag'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetent'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `UP'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tputs'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgoto'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetnum'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `BC'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetstr'
+collect2: error: ld returned 1 exit status
+
+Причина в том что библиотека libreadline.so, собрана без ncurses(https://ftp.gnu.org/gnu/ncurses/)
+
+Проверить это можно так: 
+ 1. выполнить команду: 
+ 
+ readelf --dynamic --symbols --wide /lib64/libreadline.so | grep tgetent
+ 
+ Результат:
+      45: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND tgetent
+     687: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND tgetent
+ 
+ Если библиотека libreadline собрана с ncurses, но последней нет в системе то увидим мы следующее:
+ 1. Выполним ту же команду: 
+ 
+ readelf --dynamic --symbols --wide /lib64/libreadline.so | grep tgetent | grep FUNC
+
+Результат:    
+    48: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND tgetent
+    
+ При этом ошибка во время сборки NetworkManager будет немного отличаться:
+
+/usr/local/bin/ld: warning: libtinfo.so.5, needed by /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so, not found (try using -rpath or -rpath-link)
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `PC'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetflag'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetent'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `UP'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tputs'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgoto'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetnum'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `BC'
+/usr/local/bin/ld: /bin/../lib64/gcc/x86_64-alesya-linux/9.2.0/../../../../lib64/libreadline.so: undefined reference to `tgetstr'
+
+Решение:
+1. Установить в систему библиотеку ncurses(https://ftp.gnu.org/gnu/ncurses/)
+2. Собрать библиотеку libreadline с поддержкой установленной ncurses
