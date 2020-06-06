@@ -5,6 +5,7 @@
 # TODO: lock by creating a directory to allow only single run of this script?
 
 LIVE=/mnt/live/memory
+LIVEKITNAME=$(cat /mnt/live/lib/init.cfg | grep -E '^LIVEKITNAME' | cut -d"=" -f2 | tr -d \")
 COMMAND="$1"
 PARAM="$2"
 TARGET="$3"
@@ -243,7 +244,7 @@ deactivate()
    local BUNDLES SB AB NSB MATCH LOOP LOOPFILE
 
    BUNDLES=$LIVE/bundles
-   MODULES=$LIVE/modules
+   MODULES=$LIVE/data/$LIVEKITNAME/modules
    SB="$(basename "$1")"
    AB=".ab"
    NSB="${SB%.*}"
@@ -289,11 +290,10 @@ deactivate()
    losetup -d "$LOOP" 2>/dev/null
 
    # remove the .ab file, but keep it if deactivate was issued on full ab real path
-   Q="$(question "Alsy bundle: $SB\n File will be moved to deactivated modules\nMove it now?")"
-   if [ "$Q" = "0" ]; then # yes
-     mkdir -p "$MODULES/deactivate"
-     mv -v "$LOOPFILE" "$MODULES/deactivate/"
-   fi
+#  if [ "$(realpath "$1")" != "$(realpath "$LOOPFILE")" ]; then
+      mkdir -p "$MODULES/deactivate"
+      mv -v "$LOOPFILE" "$MODULES/deactivate/"
+#   fi
 
    echo "Alsy Bundle deactivated: $SB"
    if [ "$GUI" ]; then
