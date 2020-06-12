@@ -176,6 +176,7 @@ activate()
 
    SB="$(readlink -f "$1")"
    BAS="$(basename "$SB")"
+   MODULES=$LIVE/data/$LIVEKITNAME/modules
 
    # check if file exists
    if [ ! -r "$SB" ]; then
@@ -205,8 +206,12 @@ activate()
    # mount remount,add
    TGT="$LIVE/bundles/$BAS"
    mkdir -p "$TGT"
-
-   mount -n -o loop,ro "$SB" "$TGT"
+   echo "$MODULES/$BAS"
+   sleep 3
+   if [ ! -r $MODULES/$BAS ]; then
+     mv "$SB" "$MODULES/"
+   fi
+   mount -n -o loop,ro "$MODULES/$BAS" "$TGT"
    if [ $? -ne 0 ]; then
       die "Error mounting of the bundle, perhaps corrupted download"
    fi
