@@ -1,0 +1,14 @@
+#!/bin/bash
+# convert .ab compressed Alsy Bundle file into directory tree
+# Author: Tomas M. <http://www.slax.org/>
+# Modified By: Sevastyanov S.V.
+#
+
+if [ ! -d "$2" ]; then
+   echo 
+   echo "Convert .ab compressed Alsy Bundle module into directory tree"
+   echo "usage: $0 source_file.ab existing_output_directory"
+   exit 1
+fi
+
+unsquashfs -f -dest "$2" "$1" >/dev/null

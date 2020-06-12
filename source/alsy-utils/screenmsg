@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+if [ "$1" != "" ]; then
+  if [ "$2" = "OK" ]; then
+    echo -e "\e[0m\e[1m [ $(date +'%d.%m.%4Y %T.%3N') ] \e[0m $1 ................................\e[1m   [ \e[32m OK \e[0m\e[1m ]\e[0m"
+  fi
+fi
