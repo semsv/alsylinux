@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ "$(mount -l | grep "/media/cdrom type")" != "" ]; then
+  sudo umount /media/cdrom
+  sleep 3
+fi
+
+sudo mkdir -p /media/cdrom
+sudo mount -o loop "$1" /media/cdrom
+sleep 3
