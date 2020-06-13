@@ -1,0 +1,5 @@
+
+Проверить перед компиляцией что доступна функция v_vdpau_bind_context (иначе комп заканчивается ошибкой)
+
+readelf --dynamic --symbols --wide /lib64/libavcodec.so | grep av_vdpau_bind_context
+   569: 000000000070d170   135 FUNC    GLOBAL DEFAULT   13 av_vdpau_bind_context@@LIBAVCODEC_58
