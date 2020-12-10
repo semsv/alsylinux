@@ -1,0 +1,62 @@
+#!/bin/sh
+
+localfile="$1"
+gitlogin="$2"
+gitproject="$3"
+gitfile="$localfile".git
+
+if [ "$gitlogin" == "" ]; then
+  gitlogin="semsv"
+  gitproject="alsylinux"
+else
+  if [ "$gitproject" == "" ]; then
+    gitproject="alsylinux"
+  fi
+fi
+
+githttpref="https://github.com/$gitlogin/$gitproject/raw/master"
+
+# Проверяем наличие файла с контрольной суммой для локального файла, удаляем его если он есть
+if [ -f "$localfile".md5sum ]; then
+  rm -r "$localfile".md5sum
+  rmmess=""
+fi
+# Повторно проверяем, если неудалось удалить значит нет прав и сразу на выход тогда
+if [ -f "$localfile".md5sum ]; then
+  echo "2"
+  exit 2
+fi
+# Проверяем наличие файла скаченного с гитхаб с контрольной сумой, удаляем его если он есть
+if [ -f "$gitfile".md5sum ]; then
+  rm -r "$gitfile".md5sum
+  rmmess=""
+fi
+# Повторно проверяем, если неудалось удалить значит нет прав и сразу на выход тогда
+if [ -f "$gitfile".md5sum ]; then
+  echo "3"
+  exit 3
+fi
+
+# Сначала получаем контрольную сумму для локального файла
+md5sum "$localfile" >> "$localfile".md5sum
+
+# Теперь скачиваем с сервера гитхаб файл и его контрольную сумму
+wget -O "$gitfile"        "$githttpref$localfile"
+wget -O "$gitfile".md5sum "$githttpref$localfile".md5sum
+
+# Проверяем что контрольная сумма в гитхаб (скаченная и просмотренная из файла) действительно соответствует файлу на гитхаб (скачиваем файл и сами считаем контрольную сумму)
+if [ "$(md5sum $gitfile | cut -d " " -f1)" != "$(cat "$gitfile".md5sum | cut -d " " -f1)" ]; then
+  echo "4"
+  exit 4
+fi
+
+if [ "$(cat "$localfile".md5sum | cut -d " " -f1)" == "$(cat "$gitfile".md5sum | cut -d " " -f1)" ]; then
+  echo "0"
+  exit 0
+else
+#  echo "$(cat "$localfile".md5sum | cut -d " " -f1)"
+#  echo "$(cat "$gitfile".md5sum   | cut -d " " -f1)"
+#  echo "$githttpref$localfile"
+  echo "1"
+  exit 1
+fi
