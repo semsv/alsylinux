@@ -3,8 +3,8 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.11                                                                                     ###
-###   Дата последнего изменения: 27 февраля 2020 16:19 четверг                                           ###
+###   Версия: 1.0.12                                                                                     ###
+###   Дата последнего изменения: 28 декабря 2020 22:49 понедельник                                       ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -16,7 +16,7 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.11
+version=1.0.12
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -29,6 +29,7 @@ version=1.0.11
 # В версии 1.0.9 исправлены мелкие баги
 # В версии 1.0.10 изменен настройки вывода текста подсказок и версии
 # В версии 1.0.11 незначительно изменен способ установки готового модуля в систему
+# В версии 1.0.12 добавлена возможность выполнить команду make install под пользовать root через программу sudo
 copyflag="0"
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
@@ -396,7 +397,15 @@ echo "**************************************************************************
 
 #Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
 if [ "$makeprefix" == "" ]; then
-  make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+  if [ "$UID" != "0" ]; then
+    if [ -f /usr/bin/sudo ]; then
+     sudo make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+    else
+     su -c "make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log"
+    fi
+  else
+    make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+  fi
 else
   echo "make $makeprefix install"
   make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
