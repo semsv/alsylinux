@@ -2,5 +2,6 @@
 
 dependency:
   pkg-config >= 0.28
-  automake >= 2.15
-  autoconf >= 2.69
+  automake   >= 2.15
+  autoconf   >= 2.69
+  m4         >= 1.4.18
