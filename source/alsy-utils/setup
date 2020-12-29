@@ -42,6 +42,15 @@ AppConfigScenario="configure --prefix=$AppPrefix/$AppName" # Сценарий к
 ConfigureFile="configure"
 CurrDir="$(pwd)"
 
+# Добавлена для версии 1.0.12
+as_root()
+{
+  if   [ $EUID = 0 ];        then $*
+  elif [ -x /usr/bin/sudo ]; then sudo $*
+  else                            su -c \\"$*\\"
+  fi
+}
+
 # Для версии 1.0.6 Добавлена возможность обхода всех папок программы и создания символьных ссылок на файлы
 create_link()
 {
@@ -396,16 +405,8 @@ echo "****  MAKEFILE INSTALL SCRIPT START                                       
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
 #Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
-if [ "$makeprefix" == "" ]; then
-  if [ "$UID" != "0" ]; then
-    if [ -f /usr/bin/sudo ]; then
-     sudo make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
-    else
-     su -c "make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log"
-    fi
-  else
-    make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
-  fi
+if [ "$makeprefix" == "" ]; then  
+  as_root make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log  
 else
   echo "make $makeprefix install"
   make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
@@ -438,7 +439,7 @@ cd ..
 
 #Если, вдруг, остались файлы от предыдущих установок, то надо их удалить
 if [ "$(ls -1 -a | grep .new_install 2>/dev/null)" != "" ]; then
-rm -rd .new_install
+ rm -rd .new_install
 fi
 
 #Создаем директорию для новой программы
@@ -494,15 +495,17 @@ mksquashfs .new_install $2-ALSY.$AppName.ab -comp xz -b 512K
 rm -rd .new_install
 
 #Удаляем файлы программы из установочной директории
-rm -rd $AppPrefix/$AppName
+as_root rm -rd $AppPrefix/$AppName
+#Для послед возможности монтирования модуля без перезагрузки
+as_root mkdir $AppPrefix/$AppName
 
 #Выполняем установку программы в операционную систему
 if [ "$LIVEKITNAME" != "" ]; then
   if [ -f /mnt/live/memory/data/$LIVEKITNAME/modules/$2-ALSY.$AppName.ab ]; then
-    mkdir -p /mnt/live/memory/data/$LIVEKITNAME/install
-    cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/install
+    as_root mkdir -p /mnt/live/memory/data/$LIVEKITNAME/install
+    as_root cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/install
   else
-    cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/modules
+    as_root cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/modules
   fi
 fi
 
