@@ -1,0 +1,14 @@
+Если в системе установлен pkg-config версии 0.26 или ниже 
+можно увидеть такую ошибку при попытке сконфигурировать программу:
+
+configure.ac:10: warning: PKG_PROG_PKG_CONFIG is m4_require'd but not m4_defun'd
+aclocal.m4:1866: XORG_INSTALL is expanded from...
+aclocal.m4:1846: XORG_DEFAULT_OPTIONS is expanded from...
+configure.ac:10: the top level
+configure:11622: error: possibly undefined macro: m4_ifval
+      If this token and others are legitimate, please use m4_pattern_allow.
+      See the Autoconf documentation.
+configure:11626: error: possibly undefined macro: AC_CHECK_FILE
+autoreconf: error: /usr/src/tools/autoconf-2.70/bin/autoconf failed with exit status: 1
+
+Решается эта проблема переустановкой pkg-config версии 0.27 или выше
