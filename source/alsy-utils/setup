@@ -43,8 +43,10 @@ ConfigureFile="configure"
 CurrDir="$(pwd)"
 
 # Добавлена для версии 1.0.12
+message_for_pwdreq="Please Enter root Password..."
 as_root()
 {
+  echo $message_for_pwdreq
   if   [ $EUID = 0 ];        then $*
   elif [ -x /usr/bin/sudo ]; then sudo $*
   else                            su -c \\"$*\\"
@@ -396,7 +398,7 @@ fi
 
 #Перед установкой очищаем от предыдущих установок
 if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" != "" ]; then
-rm -rd $AppPrefix/$AppName
+as_root rm -rd $AppPrefix/$AppName
 fi
 
 
