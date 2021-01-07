@@ -1,0 +1,9 @@
+#!/bin/make
+all:
+	python3 -m pip install -U pip
+	python3 -m pip install -U meson
+	python3 -m pip install -U ninja
+	python3 -m pip install -U docwriter
+	python3 -m pip install -U pyconfig
+#	python3 -m pip install -U pygraphviz
+	python3 -m pip install -U PyGObject
