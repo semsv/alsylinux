@@ -19,7 +19,7 @@ do
 	  AFILE__="$( echo "$DIR__/$FILE__" | sed 's/%20%/ /g' )"
 	
 	  if [ -f "$(echo $AFILE__)" ]; then
-	    AFILE__="$(basename $(echo $AFILE__))"
+	    AFILE__="${AFILE__##*/}"
 	    leng_str1="$(expr length $CRT_LINK_PATH)"
 	    leng_str2=$(expr length $(echo $DIR__/$AFILE__ | sed 's/ /%/g' ))
 	    let cpl=leng_str2-leng_str1
