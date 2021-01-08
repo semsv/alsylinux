@@ -47,10 +47,9 @@ CurrDir="$(pwd)"
 message_for_pwdreq="Please Enter root Password..."
 as_root()
 {
-  echo $message_for_pwdreq
   if   [ $EUID = 0 ];        then $*
-  elif [ -x /usr/bin/sudo ]; then sudo $*
-  else                            su -c \\"$*\\"
+  elif [ -x /usr/bin/sudo ]; then echo $message_for_pwdreq && sudo $*
+  else                            echo $message_for_pwdreq && su -c \\"$*\\"
   fi
 }
 
@@ -362,7 +361,7 @@ if [ "$makeprefix" == "" ]; then
   as_root make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log  
 else
   echo "make $makeprefix install"
-  make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
+  as_root make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
 fi
 
 #Если все хорошо то у нас появляется директория $AppPrefix/$AppName, проверим это:

@@ -47,7 +47,7 @@ do
 	      fi
 	    fi
 	    ##########################
-	    echo "ln -s $res_str $2/$res_str2" >> $SCRIPT_FILE
+	    echo "ln -s "'"'"$res_str"'"' '"'"$2/$res_str2"'"' >> $SCRIPT_FILE
 	  elif [ -d "$(echo $AFILE__)" ]; then
 	    echo "---------------$AFILE__-----------------"
 	  fi
