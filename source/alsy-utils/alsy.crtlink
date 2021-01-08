@@ -5,86 +5,53 @@ CRT_LINK_PATH="$1"
 SCRIPT_FILE="$3"
 
 if [ "$SCRIPT_FILE" == "" ]; then
- SCRIPT_FILE="files.dat"
+	SCRIPT_FILE="files.dat"
 fi
 
 echo "#!/bin/bash" > "$SCRIPT_FILE"
-#echo "#!/bin/bash" > .alsy.listx.sh 
- 
+
 for DIR__ in $( ls -l -R "$CRT_LINK_PATH" | grep -E ':$' ) 
- do               
-   DIR__="${DIR__%:*}"
-   logic_create_dir="1"
-   for FILE__ in $( ls "$DIR__/" | sed 's/ /%20%/g' )
-     do
-       AFILE__="$( echo "$DIR__/$FILE__" | sed 's/%20%/\\ /g' )"
-       
-       echo "#!/bin/bash"             > .alsy.list1.sh       
-       echo "ls -1 $AFILE__ | wc -l" >> .alsy.list1.sh
-#       echo "ls -1 $AFILE__ | wc -l" >> .alsy.listx.sh
-       chmod a+rwx .alsy.list1.sh
-       ta="$(./.alsy.list1.sh)"       
-       
-       echo "#!/bin/bash"                    > .alsy.list2.sh       
-       echo "basename " '"' "$AFILE__ " '"' >> .alsy.list2.sh
-       chmod a+rwx .alsy.list2.sh       
-       AFILE__="$(./.alsy.list2.sh)"
-       
-       if [ "$ta" == "1" ]; then
-         FILE__="$(echo $FILE__ | sed 's/%20%/ /g')"
-         AFILE__="$(echo $AFILE__| sed 's/\\ / /g')"
-         
-#         echo $AFILE__
-#         echo $FILE__
-         
-         if [ "$AFILE__" == "$FILE__" ]; then
-           leng_str1="$(expr length $CRT_LINK_PATH)"
-           leng_str2=$(expr length $(echo $DIR__/$AFILE__ | sed 's/ /%/g' ))
-           
-           let cpl=leng_str2-leng_str1
-           let pos=leng_str2-cpl
-           
-           if [ "$cpl" -gt 0 ]; then
-           
-#             echo $cpl
-#             echo $pos
-           
-             fls="$DIR__/$AFILE__"
-             res_str=${fls:$pos:$cpl}
-           
-             cpl=$(expr length $(echo $res_str | sed 's/ /%/g' ))
-             let cpl=cpl-1
-             res_str2="${res_str:1:$cpl}"
-             
-#             echo $res_str
-#             echo $res_str2
-           
-             #########################
-             ## For create dir:
-             #########################
-             if [ "$logic_create_dir" == "1" ]; then
-               logic_create_dir="0"
-               rlfile="$(basename $2/$res_str2)"
-               rlpath="$2/$res_str2"
-               l1="$(expr length $rlfile)"
-               l2="$(expr length $rlpath)"
-               let cpl=l2-l1
-               rlpath=${rlpath:0:cpl}
-               echo "mkdir -p $rlpath" >> "$SCRIPT_FILE"
-               if [ $? -ne 0 ]; then
-                 exit 1
-               fi
-             fi
-             ##########################
-             echo "ln -s "'"'"$res_str"'"' '"'"$2/$res_str2"'"' >> "$SCRIPT_FILE"
-             if [ $? -ne 0 ]; then
-               exit 1
-             fi            
-           fi
-         fi
-       fi
-     done
- done
+do
+	DIR__="${DIR__%:*}"
+	logic_create_dir="1"
+	for FILE__ in $( ls "$DIR__/" | sed 's/ /%20%/g' )
+	do
+	  AFILE__="$( echo "$DIR__/$FILE__" | sed 's/%20%/ /g' )"
+	
+	  if [ -f "$(echo $AFILE__)" ]; then
+	    AFILE="$(echo $AFILE__)"
+	    leng_str1="$(expr length $CRT_LINK_PATH)"
+	    leng_str2=$(expr length $(echo $DIR__/$AFILE__ | sed 's/ /%/g' ))
+	    let cpl=leng_str2-leng_str1
+	    let pos=leng_str2-cpl
+	    fls="$DIR__$AFILE__"
+	    res_str=${fls:$pos:$cpl}
+	    cpl=$(expr length $(echo $res_str | sed 's/ /%/g' ))
+	    let cpl=cpl-1
+	    res_str2="${res_str:1:$cpl}"
+	    echo "ln -s $res_str $2/$res_str2" >> $SCRIPT_FILE
+	    #########################
+	    ## For create dir:
+	    #########################
+	    if [ "$logic_create_dir" == "1" ]; then
+	      logic_create_dir="0"
+	      rlfile="$(basename $2/$res_str2)"
+	      rlpath="$2/$res_str2"
+	      l1="$(expr length $rlfile)"
+	      l2="$(expr length $rlpath)"
+	      let cpl=l2-l1
+	      rlpath=${rlpath:0:cpl}
+	      echo "mkdir -p $rlpath" >> $SCRIPT_FILE
+	      if [ $? -ne 0 ]; then
+	        exit 1
+	      fi
+	    fi
+	    ##########################
+	  elif [ -d "$(echo $AFILE__)" ]; then
+	    echo "---------------$AFILE__-----------------"
+	  fi
+	done
+done
 }
 
 if [ "$1" == "test" ]; then
