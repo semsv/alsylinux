@@ -1,0 +1,25 @@
+При конфигурации программы заметил такую ошибку:
+
+Checking header volume_key/libvolume_key.h existence and usability...mktemp: invalid option -- '-'
+Usage: mktemp [-V] | [-dqtu] [-p prefix] [template]
+./configure: line 15055: $temp_file: ambiguous redirect
+gcc: fatal error: no input files
+compilation terminated.
+no
+
+Причина в утилите mktemp которая работает по разному на разных системах в данном случае она 
+запускалась с ключом --tmpdir
+
+Решение:
+
+Подготовил свой конфиг (см. файл в данной папке config.sh) в котором прописал:
+
+      sed 's/--tmpdir/-t/g' -i configure &&
+      sed 's/XXXXX.c/setup.tmp.1.XXXXXXXX/g' -i configure &&
+      ./configure --prefix=/usr/src/tools/$app \
+                  --sysconfdir=/etc \
+                  --with-python3    \
+                  --without-gtk-doc \
+                  --without-nvdimm  \
+                  --without-dm
+
