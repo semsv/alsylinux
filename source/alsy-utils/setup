@@ -3,8 +3,8 @@
 ###   Исполняемый Файл для сборки и установки программ для Alsy Linux в формате Alsy Bundle              ###
 ###   Автор: Севастьянов Семен Владимирович                                                              ###
 ###   Дата: 19 сентября 2017 года                                                                        ###
-###   Версия: 1.0.13                                                                                     ###
-###   Дата последнего изменения: 08 января 2021 13:05 понедельник                                       ###
+###   Версия: 1.0.14                                                                                     ###
+###   Дата последнего изменения: 09 января 2021 13:05 суббота                                            ###
 ###   Как пользоваться данным файлом (setup):                                                            ###
 ###               1. Скачиваем исходники программы, например: readline-7.0.tar.gz                        ###
 ###               2. Распакуем файл readline-7.0.tar.gz например в директорию "/usr/src"                 ###
@@ -16,7 +16,7 @@
 ###  Наслаждайтесь!!!                                                                                    ###
 ############################################################################################################
 #Объявляем переменные
-version=1.0.13
+version=1.0.14
 # В версии 1.0.1 исправлен баг связанный с удалением файла MakeFile в опр ситуациях
 # подробнее ситуация описана ниже и выделена комментариями "FIX BUG:1 BEGIN" и "FIX BUG:1 END"
 # В версии 1.0.2 добавлена возможность игнорировать ошибки помеченные так: "(ignored)"
@@ -31,6 +31,7 @@ version=1.0.13
 # В версии 1.0.11 незначительно изменен способ установки готового модуля в систему
 # В версии 1.0.12 добавлена возможность выполнить команду make install под пользовать root через программу sudo
 # В версии 1.0.13 Перенесли в отдельный файл функцию create_link а так же попытка исправить баг с пробелами в именах файлов
+# В версии 1.0.14 Устранены незначительные баги
 copyflag="0"
 AppFullName="$1"                                           # Полный путь и имя файла
 if [ "$AppFullName" != "-v" ]; then
@@ -45,11 +46,21 @@ CurrDir="$(pwd)"
 
 # Добавлена для версии 1.0.12
 message_for_pwdreq="Please Enter root Password..."
+need_root()
+{
+  if   [ $EUID != 0 ]; then
+    if [ "$*" != "" ]; then
+      message_for_pwdreq="$*"
+    fi
+    echo -e "\e[1m\e[36m *** " $message_for_pwdreq " ***\e[0m"
+  fi
+}
+
 as_root()
 {
   if   [ $EUID = 0 ];        then $*
-  elif [ -x /usr/bin/sudo ]; then echo $message_for_pwdreq && sudo $*
-  else                            echo $message_for_pwdreq && su -c \\"$*\\"
+  elif [ -x /usr/bin/sudo ]; then sudo $*
+  else                            su -c \\"$*\\"
   fi
 }
 
@@ -348,7 +359,8 @@ fi
 
 #Перед установкой очищаем от предыдущих установок
 if [ "$(ls -1 $AppPrefix | grep $AppName 2>/dev/null)" != "" ]; then
-as_root rm -rd $AppPrefix/$AppName
+ need_root "Please insert root pwd for clean install dir...."
+ as_root rm -rd $AppPrefix/$AppName
 fi
 
 
@@ -357,10 +369,12 @@ echo "****  MAKEFILE INSTALL SCRIPT START                                       
 echo "************************************************************************************************" >>$AppFullName/setup_all.log
 
 #Команда - установить ранее собранную программу, в соотв с ранее произв конфигурацией
-if [ "$makeprefix" == "" ]; then  
+if [ "$makeprefix" == "" ]; then
+  need_root "Please insert root pwd for make install..."
   as_root make install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log  
 else
   echo "make $makeprefix install"
+  need_root "Please insert root pwd for make install..."
   as_root make "$makeprefix" install >>$AppFullName/setup_all.log > $AppFullName/setup_install.log 2> $AppFullName/setup_install_err.log
 fi
 
@@ -444,19 +458,21 @@ cp -rLd .new_install/$AppPrefix/$AppName/* .new_install
 mksquashfs .new_install $2-ALSY.$AppName.ab -comp xz -b 512K
 
 #И Удаляем временную директорию программы
-rm -rd .new_install
+rm -rfd .new_install
 
 #Удаляем файлы программы из установочной директории
-as_root rm -rd $AppPrefix/$AppName
-#Для послед возможности монтирования модуля без перезагрузки
-as_root mkdir $AppPrefix/$AppName
+ need_root "Please insert root password for clean install dir..."
+ as_root rm -rd $AppPrefix/$AppName
 
 #Выполняем установку программы в операционную систему
 if [ "$LIVEKITNAME" != "" ]; then
   if [ -f /mnt/live/memory/data/$LIVEKITNAME/modules/$2-ALSY.$AppName.ab ]; then
+    need_root "Please insert root pwd for create install dir on device..."
     as_root mkdir -p /mnt/live/memory/data/$LIVEKITNAME/install
+    need_root "Please insert root pwd for copy bundle to device..."
     as_root cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/install
   else
+    need_root "Please insert root pwd for copy bundle to device..."
     as_root cp -r $2-ALSY.$AppName.ab /mnt/live/memory/data/$LIVEKITNAME/modules
   fi
 fi
