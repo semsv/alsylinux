@@ -2,26 +2,8 @@
 
 # Functions library :: for Linux Live Kit scripts
 # Author: Tomas M. <http://www.linux-live.org>
-###################################
-# Modified by: Sevastyanov S.   ###
-# New function:                 ###    
-# ---   find_core_modules_try   ###
-# ---   check_point_mount       ### 
-# Modified function:            ###
-# ---   union_append_bundles    ###
-# ---   copy_rootcopy_content   ###
-# ---   init_devs               ###
-# ---   find_data_try           ###
-# ---   device_bestfs           ###
-# Deleted function:             ###
-# ---   filter_load             ###
-# ---   filter_noload           ###
-# ---   init_network_dev        ###
-# ---   init_zram               ###
-# ---   init_swap               ###
-# ---   download_data_pxe       ###
-# ---   sortmod                 ###
-###################################
+#
+# Corrected by: Sevastyanov S.
 
 # =================================================================
 # debug and output functions
@@ -130,7 +112,7 @@ alsymnt="alsy.mntpoint"
   else
     alsymagicnum="$(cmdline_value mntpoint)"
     if [ -f  "$1/$alsymnt" ]; then
-      if [ "$(cat "$1/$alsymnt" | grep "$alsymagicnum")" != "" ]; then
+      if [ "$(cat "$1/$alsymnt" | grep "$alsymagicnum")" != "" ]; then        
         echo "1"
       else
         echo "0"
@@ -141,37 +123,18 @@ alsymnt="alsy.mntpoint"
   fi  
 }
 
-##############################################################
-# find_core_modules_try                                      #
-##############################################################
-# $1 = data directory target (mount here)
-# $2 = data directory which contains compressed images (core modules)
-find_core_modules_try()
+check_point_install()
 {
-   local DEVICE FS IMAGES OPTIONS
-   mkdir -p "$1"
-   blkid | sort | cut -d: -f 1 | grep -E -v "/loop|/ram|/zram" | while read DEVICE; do      
-      FS="$(device_bestfs "$DEVICE")"
-      OPTIONS="$(fs_options $FS)"
-      mount -r "$DEVICE" "$1" $FS $OPTIONS 2>/dev/null
-      IMAGES="$2"
-      if [ "$(ls -1 $1/$IMAGES | grep '[.]'img.gz'$' 2>/dev/null)" -ne "" ]; then
-        for MODULES in $(ls -1 $1/$IMAGES | grep '[.]'img.gz'$')
-        do
-          MODULES="$1/$IMAGES/$MODULES"           
-          MOD="$(basename $MODULES)"           
-          cp -r "$MODULES" /lib
-          gunzip /lib/"$MOD"
-          MOD="${MOD%.*}"
-          tar -C /lib -xf /lib/"$MOD"
-        done
-        mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
-        return
-      fi      
-      # unmount twice, since there could be mounted ISO as loop too. If not, it doesn't hurt
-      umount "$1" 2>/dev/null
-      umount "$1" 2>/dev/null
-   done      
+        if [ -d "$1/install" ]; then          
+          for file in $( ls -1 "$1/install" | grep '[.]'ab'$' )
+          do 
+            if [ -f $1/modules/$file ]; then 
+              mv $1/modules/$file $1/install/$file.di
+            fi
+            cp $1/install/$file $1/modules/$file
+            mv $1/install/$file $1/install/$file.installed
+          done
+        fi
 }
 
 # test if the script is started by root user. If not, exit
@@ -348,39 +311,6 @@ fs_options()
    fi
 }
 
-
-# Modprobe network kernel modules until a working driver is found.
-# These drivers are (or used to be) probed in Slackware's initrd.
-# The function returns the first device found, yet it doesn't have
-# to be a working one, eg. if the computer has two network interfaces
-# and ethernet cable is plugged only to one of them.
-#
-##init_network_dev()
-##{
-##   debug_log "init_network_dev" "$*"
-##   local MODULE ETH
-##
-##   for MODULE in 3c59x acenic de4x5 e1000 e1000e e100 epic100 hp100 \
-##   ne2k-pci pcnet32 8139too 8139cp tulip via-rhine r8169 atl1e yellowfin \
-##   tg3 dl2k ns83820 atl1 b44 bnx2 skge sky2 tulip depca 3c501 3c503 \
-##   3c505 3c507 3c509 3c515 ac3200 at1700 cosa cs89x0 de600 de620 e2100 \
-##   eepro eexpress eth16i ewrk3 forcedeth hostess_sv11 hp-plus hp ni52 \
-##   ni65 sb1000 sealevel smc-ultra sis900 smc9194 wd; do
-##      modprobe $MODULE 2>/dev/null
-##      ETH="$(cat /proc/net/dev | grep : | grep -v lo: | cut -d : -f 1 | tr -d " " | head -n 1)"
-##      if [ "$ETH" != "" ]; then
-##         echo $ETH
-##         return 0
-##      fi
-##      rmmod $MODULE 2>/dev/null
-##   done
-##
-   # If we are here, none of the above specified modules worked.
-   # As a last chance, try to modprobe everything.
-##   find /lib/modules/ | xargs -n 1 modprobe
-##   cat /proc/net/dev | grep : | grep -v lo: | cut -d : -f 1 | tr -d " " | head -n 1
-##}
-
 # Find LIVEKIT data by mounting all devices
 # If found, keep mounted, else unmount
 # $1 = data directory target (mount here)
@@ -413,6 +343,8 @@ find_data_try()
           # we found at least one bundle/module here
           mount -o remount,rw "$DEVICE" "$1" 2>/dev/null
           echo "$1/$FROM" | tr -s "/" | sed -r "s:/[^/]+/[.][.]/:/:g"
+          echo "check install..."
+          check_point_install $1/$FROM
           return
         fi  
       fi
@@ -442,41 +374,6 @@ find_data()
    for timeout in $(seq 1 $1); do
       echo -n "." >&2
       DATA="$(find_data_try "$2" "$FROM")"
-      if [ "$DATA" != "" ]; then
-         echo "" >&2
-         echo "* Found on $(mounted_device "$2")" >&2
-         echo "$DATA"
-         return
-      fi
-      sleep 1
-   done
-   echo "" >&2
-
-   if [ "$DATA" = "" ]; then
-      fatal "$LIVEKITNAME data not found"
-   fi
-
-}
-
-# Retry finding LIVEKIT data core modules several times,
-# until timeouted or until data is found
-# $1 = timeout
-# $2 = data directory target (mount here)
-#
-find_data_images()
-{
-   debug_log "find_data" "$*"
-
-   local DATA FROM
-   
-   FROM="$(cmdline_value from)"
-   if [ "$FROM" = "" ]; then FROM="$LIVEKITNAME"; fi
-
-   echo_green_star >&2
-   echo -n "Looking for $LIVEKITNAME data images in /$FROM/images .." | tr -s "/" >&2
-   for timeout in $(seq 1 $1); do
-      echo -n "." >&2
-      DATA="$(find_core_modules_try "$2" "$FROM/images")"
       if [ "$DATA" != "" ]; then
          echo "" >&2
          echo "* Found on $(mounted_device "$2")" >&2
@@ -544,39 +441,6 @@ copy_to_ram()
    fi
 }
 
-# load filter
-#
-##filter_load()
-##{
-##   local FILTER
-##   FILTER=$(cmdline_value load)
-##   if [ "$FILTER" = "" ]; then
-##      cat -
-##   else
-##      cat - | egrep "$FILTER"
-##  fi
-##}
-
-# noload filter
-#
-##filter_noload()
-##{
-##   local FILTER
-##   FILTER=$(cmdline_value noload)
-##   if [ "$FILTER" = "" ]; then
-##      cat -
-##   else
-##      cat - | egrep -v "$FILTER"
-##   fi
-##}
-
-# sort modules by number even if they are in subdirectory
-#
-##sortmod()
-##{
-##   cat - | sed -r "s,(.*/(.*)),\\2:\\1," | sort -n | cut -d : -f 2-
-##}
-
 # Mount squashfs filesystem bundles
 # and add them to union
 # $1 = directory where to search for bundles
@@ -595,18 +459,23 @@ union_append_bundles()
    local BUN
    local BASEPATH      
    
-##   BASEPATH="/memory/data/$LIVEKITNAME/images"  
-##   for BUNDLE in $( ls -1 "$BASEPATH" | grep '[.]'img.gz'$' ) 
-##    do      
-##      BUNDLE="$BASEPATH"/"$BUNDLE"   
-##      echo "* $BUNDLE"
-##      BUN="$(basename "$BUNDLE")"
-##      echo "* $BUN"   
-##      cp -r "$BUNDLE" /lib
-##      gunzip /lib/"$BUN"
-##      BUN="${BUN%.*}"
-##      tar -C /lib -xf /lib/"$BUN"   
-##   done    
+   BASEPATH="/memory/data/$LIVEKITNAME/images"
+  
+   for BUNDLE in $( ls -1 "$BASEPATH" | grep '[.]'img.gz'$' ) 
+    do
+      
+      BUNDLE="$BASEPATH"/"$BUNDLE"
+   
+      echo "* $BUNDLE"
+      BUN="$(basename "$BUNDLE")"
+      echo "* $BUN"
+   
+      cp -r "$BUNDLE" /lib
+      gunzip /lib/"$BUN"
+      BUN="${BUN%.*}"
+      tar -C /lib -xf /lib/"$BUN"
+   
+   done    
    
    BASEPATH="/memory/data/$LIVEKITNAME/modules"
    echo_green_star
@@ -632,7 +501,7 @@ union_append_bundles()
       if [ -f "$BASEPATH/black.lst" ]; then
         for cmd in $( cat $BASEPATH/black.lst )
           do
-            if [ "$(ls -1 $BASEPATH/$BUN | grep $cmd)" != "" ]; then
+            if [ "$(ls -1 $BASEPATH | grep $cmd)" = "$BUN" ]; then
               enable_bun=0
             fi
           done
@@ -647,16 +516,7 @@ union_append_bundles()
         mount -o remount,add:1:"$2/$BUN" aufs "$3"
       fi
     done  
-# << 2017-08-02 Sevastyanov S.V.    
-#   echo_green_star
-#   echo "Adding bundles to union"
-#   ( ls -1 "$1" | sort -n ; cd "$1" ; find modules/ 2>/dev/null | sortmod | filter_load) | grep '[.]'$BEXT'$' | filter_noload | while read BUNDLE; do
-#      echo "* $BUNDLE"
-#      BUN="$(basename "$BUNDLE")"
-#      mkdir -p "$2/$BUN"
-#      mount -o loop -t squashfs "$1/$BUNDLE" "$2/$BUN"
-#      mount -o remount,add:1:"$2/$BUN" aufs "$3"
-#   done
+# << 2017-08-02 Sevastyanov S.V.
 }
 
 # Create empty fstab properly
@@ -673,7 +533,6 @@ fstab_create()
    echo sysfs /sys sysfs defaults 0 0 >> $FSTAB
    echo devpts /dev/pts devpts gid=5,mode=620 0 0 >> $FSTAB
    echo tmpfs /dev/shm tmpfs defaults 0 0 >> $FSTAB
-  
 }
 
 
@@ -683,7 +542,6 @@ fstab_create()
 change_root()
 {
    debug_log "change_root" "$*"
-   #init_swap
    umount /proc
    umount /sys
 
