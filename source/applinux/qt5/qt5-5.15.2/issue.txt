@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+In file included from ssl/qsslsocket_openssl_p.h:87,
+                 from ssl/qsslsocket_openssl_symbols_p.h:72,
+                 from ssl/qsslcertificate.cpp:134:
+/lib64/gcc/x86_64-alesya-linux/9.2.0/include-fixed/openssl/bn.h:610:1: error: ‘CRYPTO_THREADID’ does not name a type; did you mean ‘CRYPTO_THREAD_ID’?
+  610 | CRYPTO_THREADID *BN_BLINDING_thread_id(BN_BLINDING *);
+      | ^~~~~~~~~~~~~~~
+      | CRYPTO_THREAD_ID
+--------------------------------------------------------------------------------
+
+Причина в том, что в компиляторе gcc, есть папка include-fixed, 
+которая подменяет инклудники в момент сборки, 
+в данном случае это приводит к ошибке, так как подмена происходит на неправильный, старый вариант.
+
+Исправить можно след командой:
+
+if [ -d /lib64/gcc/x86_64-alesya-linux/9.2.0/include-fixed/openssl/ ]; then
+ if [ -f /usr/include/openssl/bn.h ]; then
+   su -c "cp -r /usr/include/openssl/bn.h /lib64/gcc/x86_64-alesya-linux/9.2.0/include-fixed/openssl/"
+ fi
+fi
+
