@@ -1,0 +1,4 @@
+0. patch syslinux.patch
+1. make efi32 efi64
+2. make efi32 efi64 installer 
+3. sudo make install
