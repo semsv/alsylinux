@@ -1,8 +1,11 @@
 I've built GCC 4.8.2 on several Mavericks machines, 
+
 but I chose a slightly different strategy. 
 
 Specifically, 
+
 I included the code for GMP, MPC, MPFR (and CLOOG and ISL) in the build directory. 
+
 I used a script to quasi-automate it:
 
 GCC_VER=gcc-4.8.2
