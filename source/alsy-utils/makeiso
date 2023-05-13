@@ -1,0 +1,37 @@
+#!/bin/sh
+# ---------------------------------------------------
+# Script to create bootable Alsy ISO in Linux
+# author: Semen Sevastyanov <alsylinux.clan.su>
+# ---------------------------------------------------
+
+if [ "$1" = "--help" -o "$1" = "-h" -o "$2" = "" ]; then
+  echo "This script will create bootable ISO" >&2
+  echo "usage:   $0 [ source directory tree ] [ destination.iso ]" >&2
+  echo "example: $0 /mnt/dsk1/MyAlsy/ /mnt/dsk2/AlesyaLinux.iso" >&2
+  exit 1
+fi
+
+MKISOFS=$(which mkisofs)
+
+if [ "$MKISOFS" = "" ]; then
+   echo "mkisofs not found. Please install the appropriate package (eg. cdrtools)" >&2
+   exit 3
+fi
+
+TARGET="$(readlink "$2" || echo "$2")"
+
+cd "$1"
+
+if [ -r boot/isolinux.bin ]; then
+   echo "Folder $1 contains 'boot', going one directory up to find 'alsy'."
+   cd ..
+fi
+
+if [ ! -r alsylin/boot/isolinux.bin ]; then
+   echo "Directory $(pwd) is not valid Alsy directory."
+   exit 2
+fi
+
+mkisofs -o "$TARGET" -v -J -R -D -A "Alsy" -V "Alsy CD/DVD" \
+-no-emul-boot -boot-info-table -boot-load-size 4 \
+-b alsylin/boot/isolinux.bin -c alsylin/boot/isolinux.boot .
